@@ -34,10 +34,10 @@
                     </div> 
                     <div class="neutral-venue">
                         <label for="neutral">Neutral Venue</label>
-                        <input type="checkbox" name="neutral_venue" id="neutral" value="1"> <!-- Checkbox for neutral venue -->
+                        <input type="checkbox" name="neutral_venue" id="neutral" value="1"> 
                     </div>
                     <div>
-                        {{ form.submit() }} <!-- Submit button -->
+                        {{ form.submit() }} 
                     </div>
                 </form>  
             </div>
@@ -86,15 +86,6 @@
             <h1 class="prob-pf-percent"> <span>40:</span> {{ pf_at_least_40 }}% </h1>
             <h1 class="prob-pf-percent"> <span>45:</span> {{ pf_at_least_45 }}% </h1>
             <h1 class="prob-pf-percent"> <span>50:</span> {{ pf_at_least_50 }}% </h1>
- 
-                <!-- <div class="custom-xpf-odds"> 
-                    <form id="xpf-form" method="POST" action="/odds"> 
-                        {{ xpf_form.hidden_tag() }} 
-                        {{ xpf_form.points () }} 
-                        {{ xpf_form.submit() }} 
-                    </form>
-                </div>  -->
-                <!-- <div id="result"><h1> {{ custom_xpf }}</h1></div> -->
         </div> 
          
         <div class="prob-pa-flexbox">   
@@ -117,30 +108,7 @@
             {% endif %}
         </div>
     </div> 
-
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#xpf-form').on('submit', function(e) {
-                e.preventDefault(); // Prevent the default form submission
-                $.ajax({
-                    type: 'POST',
-                    url: '/odds', // The same route as your form action
-                    data: $(this).serialize(), // Serialize the form data
-                    success: function(response) {
-                        $('#result').html(response); // Display the response in the result div
-                    },
-                    error: function(xhr, status, error) {
-                        $('#result').html("An error occurred: " + xhr.responseText);
-                    }
-                });
-            });
-        });
-    </script>
 </body>
-
-
 </html> 
 
 
