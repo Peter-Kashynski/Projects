@@ -88,7 +88,6 @@ body {
     text-align: center;  
     justify-content: center;  
     align-items: center;   
-    border: 1px solid rgb(220, 220, 220);
     height: 5vh;
     margin: 0;  
     background-color: var(--select-color);  
@@ -108,7 +107,6 @@ body {
     align-items: center; 
     margin-top: 3vh; 
     /* border: 2px solid black;   */ 
-    border: 1px solid rgb(220, 220, 220);
     height: 5vh; 
     background-color: var(--select-color);  
     border-radius: 30px;  
