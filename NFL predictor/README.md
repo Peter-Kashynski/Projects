@@ -3,7 +3,8 @@ This project combines machine learning and web development to display the odds o
 
 To run: 
 - Install Flask
-- Use a code editor to run, ensuring to match the file structure in this repository 
+- Use a code editor to run, ensuring to match the file structure in this repository
+- Enjoy!
 
 
 
