@@ -72,11 +72,11 @@ body {
     text-align: center;  
     justify-content: center;  
     /* align-items: center;  */
-    margin: 0 auto; /* Center the form */
-    padding: 20px; /* Add padding */
-    border: 1px solid #ccc; /* Add a border */
-    border-radius: 10px; /* Rounded corners */
-    background-color: rgb(240, 240, 240, 1); /* Light background color */ 
+    margin: 0 auto; 
+    padding: 20px; 
+    border: 1px solid #ccc; 
+    border-radius: 10px; 
+    background-color: rgb(240, 240, 240, 1); 
     margin-top: 3vh;  
     margin-bottom: 3vh;
     box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5); 
@@ -154,26 +154,26 @@ body {
 }
 /* Styles for select dropdowns */
 .team-form select {
-    width: 15vw; /* Full width */
+    width: 15vw; /
     height: 6vh; /* Height of the dropdown */
     background-color: rgb(255, 255, 255, 1);
     border: 5px solid white; 
-    border-radius: 5px; /* Rounded corners */
+    border-radius: 5px; 
     padding: 3px; /* Padding inside the dropdown */
-    font-size: 25px; /* Font size */
-    color: #333; /* Text color */
-    transition: border 0.3s; /* Transition effect for border */ 
+    font-size: 25px; 
+    color: #333; 
+    transition: border 0.3s; 
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
 }
 
 .team-form select:hover {
-    border-color: var(--select-color); /* Change border color on hover */
+    border-color: var(--select-color);
 }
 
 .team-form select:focus {
-    outline: none; /* Remove outline */
-    border-color: var(--select-color); /* Change border color on focus */
-    background-color: #fff; /* Change background on focus */
+    outline: none; 
+    border-color: var(--select-color); 
+    background-color: #fff; 
 }
 
 /* Styles for the checkbox */
@@ -183,13 +183,13 @@ body {
 
 /* Styles for the submit button */
 .team-form input[type="submit"] {
-    background-color: var(--select-color); /* Button background color */ 
+    background-color: var(--select-color); 
     border: 1px solid rgb(220, 220, 220);
-    color: white; /* Text color */
-    border-radius: 5px; /* Rounded corners */
-    padding: 10px 20px; /* Padding for the button */
-    cursor: pointer; /* Cursor change on hover */
-    font-size: 16px; /* Font size */
+    color: white; 
+    border-radius: 5px; 
+    padding: 10px 20px; 
+    cursor: pointer; 
+    font-size: 16px; 
     transition: background-color 200ms ease-in-out 0ms, transform 200ms ease-in-out 0ms;  
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); 
     margin-top: 2vh; 
@@ -197,7 +197,7 @@ body {
 }
 
 .team-form input[type="submit"]:hover {
-    background-color: var(--hover-color); /* Darker shade on hover */ 
+    background-color: var(--hover-color); 
     transform: scale(1.02);
 }  
 
