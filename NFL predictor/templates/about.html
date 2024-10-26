@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Odds Calculator</title> 
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>  
+    <div class="about-page-header"> 
+        <h1> The Odds </h1>
+    </div> 
+    <div class="about-go-back"> 
+        <h1><a href="{{ url_for('odds')}}">Go Back</a></h1>
+    </div>
+    <div class="about-grid">  
+        <div class="box-one"> 
+            <div class="box-one-header"> 
+                <h1> The Goal </h1>
+            </div> 
+            <div class="box-one-text"> 
+                <h1>  
+                    The primary goal of this project was to leverage machine  
+                    learning algorithms to provide short yet insightful 
+                    predictions and analyses of NFL games. By using historical 
+                    game data, the project aims to predict game outcomes 
+                    as well as point totals while taking factors like  
+                    home field advatage into account.
+                </h1>
+            </div>
+        </div>  
+
+        <div class="box-two"> 
+            <div class="box-two-header"> 
+                <h1> Data Collection </h1>
+            </div>  
+            <div class="box-two-text"> 
+                <h1>   
+                    To gather data on the 2023 NFL season, 
+                    I utilized web scraping techniques with Beautiful Soup, 
+                    a powerful Python library for parsing HTML and XML documents.
+                     The scraped data was cleaned and structured into a 
+                     Pandas Dataframe, another useful python library. 
+                     The well-structured data allowed for seamless integration 
+                     into the machine learning models.
+                </h1>
+            </div> 
+        </div> 
+
+        <div class="box-three">
+            <div class="box-three-header"> 
+                <h1> Linear Regression </h1>
+            </div>  
+            <div class="box-three-text"> 
+                <h1>    
+                    The first model used was scikit-learn's linear regression  
+                    model. This model uses an advanced version of gradient 
+                    descent to match the regression model with the data. After 
+                    calculating the average points scored and allowed for all 
+                    the teams, the linear regression model used these inputs to 
+                    calculate the expected amount of points scored and allowed
+                    given the opponent and the venue (home, away, or neutral).
+                </h1>
+            </div> 
+        </div>
+        <div class="box-four"> 
+            <div class="box-four-header"> 
+                <h1> Logistic Regression </h1>
+            </div>  
+            <div class="box-four-text"> 
+                <h1>    
+                    The second model used was scikit-learn’s logistic regression
+                     model. As opposed to the linear model, the logistic model 
+                     aims to predict a 1 (in our case a win) or a 0 (loss) 
+                     given the expected points scored and expected points 
+                     allowed. This model utilizes the sigmoid function to 
+                     predict the likelihood a set of inputs results in a 1.
+                </h1>
+            </div>
+        </div>
+        <div class="box-five"> 
+            <div class="box-five-header"> 
+                <h1> Probability </h1>
+            </div>  
+            <div class="box-five-text"> 
+                <h1>     
+                    Z-score and normal 
+                    distribution were used to calculate the probability of a 
+                    team scoring and allowing a given amount of points. This 
+                    involved retrieving the mean and standard deviation for 
+                    the points scored and points allowed column of the dataset. 
+                    For a given amount of points, the normal.cdf function was used to return the 
+                    likelihood of a team scoring or allowing at least that many 
+                    points. 
+                </h1>
+            </div>
+        </div>
+        <div class="box-six">
+            <div class="box-six-header"> 
+                <h1> The Application </h1>
+            </div>  
+            <div class="box-six-text"> 
+                <h1>    
+                    The framework used to deploy the application was flask, 
+                    an easy to use framework built for python that allows for 
+                    quick web development. To structure and style the 
+                    application, html and css were utilized to create an 
+                    easy-to-look-at web page with friendly colors. The depth 
+                    given to the elements on the screen mammies the appeal of 
+                    the page and adds to the user experience.  
+                </h1>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>

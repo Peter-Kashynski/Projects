@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFL Odds Calculator</title> 
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head> 
+
+<body> 
+    <div class="odds-page">
+        <div class="odds-flexbox">
+            <div class="odds-title"> 
+                <h1> NFL Odds Calculator </h1>    
+            </div> 
+            <div class="about-odds"> 
+                <p><a href="{{ url_for('about')}}" class="about-odds-link">How are these odds calculated?</a></p>
+            </div> 
+            <div class="team-form">
+                <form method="POST" action="/odds"> 
+                    {{ form.hidden_tag() }} 
+                    <div class="home-team-label">
+                        <h1 id="home-team-label">{{ form.home_team.label }}</h1>
+                    </div>
+                    <div>
+                        {{ form.home_team() }} 
+                    </div> 
+                    <div class="away-team-label">
+                        <h1 id="away-team-label">{{ form.away_team.label }}</h1> 
+                    </div> 
+                    <div>
+                        {{ form.away_team() }} 
+                    </div> 
+                    <div class="neutral-venue">
+                        <label for="neutral">Neutral Venue</label>
+                        <input type="checkbox" name="neutral_venue" id="neutral" value="1"> <!-- Checkbox for neutral venue -->
+                    </div>
+                    <div>
+                        {{ form.submit() }} <!-- Submit button -->
+                    </div>
+                </form>  
+            </div>
+            <div class="main-odds">
+                {% if form_submitted and home_team == away_team %}
+                    <div><h1>Teams must be different.</h1></div>
+                {% elif form_submitted and winning_prob is not none %} 
+                <div class="home-team-odds"><h1 id="home-team-odds"> {{ home_team_full_name }}</h1></div>
+                <div class="home-team-win-prob"><h1 id="home-team-win-prob">Winning Probability: {{ winning_prob }}%</h1></div>
+                <div class="home-team-xpf"><h1 id="home-team-xpf">Predicted Points For (XPF): {{ xpf }}</h1></div>
+                <div class="home-team-xpa"><h1 id="home-team-xpa">Predicted Points Against (XPA): {{ xpa }}</h1></div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="explanation-flexbox"> 
+            {% if home_apf is not none and home_apa is not none and home_team is not none and home_team != away_team%}
+            <div class="home-team-2023-stats">
+                <h1 id="home-team-2023-stats">  
+                    The {{ home_team_full_name }} averaged  
+                    {{ home_apf }} points while giving up 
+                    {{ home_apa }} points a game in 2023.
+                </h1>  
+            </div>   
+            <div class="away-team-2023-stats">
+                <h1 id="away-team-2023-stats">  
+                    The {{ away_team_full_name }} averaged  
+                    {{ away_apf }} points while giving up 
+                    {{ away_apa }} points a game in 2023.
+                </h1>  
+            </div> 
+        </div> 
+        <div class="prob-pf-flexbox">   
+            <div class="prob-pf"> 
+                <h1> Probability that the <span>{{ home_team_full_name }}</span> score at least: </h1>
+            </div> 
+        </div>
+        <div class="prob-pf-percent-flexbox">
+            <h1 class="prob-pf-percent"> <span>5:</span>  {{ pf_at_least_5 }}% </h1>
+            <h1 class="prob-pf-percent"> <span>10:</span> {{ pf_at_least_10 }}% </h1> 
+            <h1 class="prob-pf-percent"> <span>10:</span> {{ pf_at_least_10 }}% </h1>
+            <h1 class="prob-pf-percent"> <span>15:</span> {{ pf_at_least_15 }}% </h1>
+            <h1 class="prob-pf-percent"> <span>20:</span> {{ pf_at_least_20 }}% </h1>
+            <h1 class="prob-pf-percent"> <span>25:</span> {{ pf_at_least_25 }}% </h1>
+            <h1 class="prob-pf-percent"> <span>30:</span> {{ pf_at_least_30 }}% </h1>
+            <h1 class="prob-pf-percent"> <span>35:</span> {{ pf_at_least_35 }}% </h1>
+            <h1 class="prob-pf-percent"> <span>40:</span> {{ pf_at_least_40 }}% </h1>
+            <h1 class="prob-pf-percent"> <span>45:</span> {{ pf_at_least_45 }}% </h1>
+            <h1 class="prob-pf-percent"> <span>50:</span> {{ pf_at_least_50 }}% </h1>
+ 
+                <!-- <div class="custom-xpf-odds"> 
+                    <form id="xpf-form" method="POST" action="/odds"> 
+                        {{ xpf_form.hidden_tag() }} 
+                        {{ xpf_form.points () }} 
+                        {{ xpf_form.submit() }} 
+                    </form>
+                </div>  -->
+                <!-- <div id="result"><h1> {{ custom_xpf }}</h1></div> -->
+        </div> 
+         
+        <div class="prob-pa-flexbox">   
+            <div class="prob-pa"> 
+                <h1> Probability that the <span>{{ home_team_full_name }}</span> allow at least: </h1>
+            </div> 
+        </div>
+        <div class="prob-pa-percent-flexbox">
+            <h1 class="prob-pa-percent"> <span>5:</span>  {{ pa_at_least_5 }}% </h1>
+            <h1 class="prob-pa-percent"> <span>10:</span> {{ pa_at_least_10 }}% </h1> 
+            <h1 class="prob-pa-percent"> <span>10:</span> {{ pa_at_least_10 }}% </h1>
+            <h1 class="prob-pa-percent"> <span>15:</span> {{ pa_at_least_15 }}% </h1>
+            <h1 class="prob-pa-percent"> <span>20:</span> {{ pa_at_least_20 }}% </h1>
+            <h1 class="prob-pa-percent"> <span>25:</span> {{ pa_at_least_25 }}% </h1>
+            <h1 class="prob-pa-percent"> <span>30:</span> {{ pa_at_least_30 }}% </h1>
+            <h1 class="prob-pa-percent"> <span>35:</span> {{ pa_at_least_35 }}% </h1>
+            <h1 class="prob-pa-percent"> <span>40:</span> {{ pa_at_least_40 }}% </h1>
+            <h1 class="prob-pa-percent"> <span>45:</span> {{ pa_at_least_45 }}% </h1>
+            <h1 class="prob-pa-percent"> <span>50:</span> {{ pa_at_least_50 }}% </h1>            
+            {% endif %}
+        </div>
+    </div> 
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#xpf-form').on('submit', function(e) {
+                e.preventDefault(); // Prevent the default form submission
+                $.ajax({
+                    type: 'POST',
+                    url: '/odds', // The same route as your form action
+                    data: $(this).serialize(), // Serialize the form data
+                    success: function(response) {
+                        $('#result').html(response); // Display the response in the result div
+                    },
+                    error: function(xhr, status, error) {
+                        $('#result').html("An error occurred: " + xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+
+</html> 
+
+
+
+
+
+
