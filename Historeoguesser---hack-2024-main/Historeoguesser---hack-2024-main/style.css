@@ -1,0 +1,467 @@
+/* 
+ * Always set the map height explicitly to define the size of the div element
+ * that contains the map. 
+ */
+ #map {
+  width: 100%; 
+  height: 100%;
+  z-index: 1;
+} 
+
+#minimap {
+  width: 40%; 
+  height: 70%;
+  bottom: 25%;
+  left: 85%;
+  z-index: 2;
+  border: 7px solid rgb(220, 220, 220, 0.8); 
+  border-style: groove; 
+  transition: transform 0.3s ease;
+} 
+
+#minimap:hover { 
+  transform: translate(-26vw, -47vh);
+} 
+.hidden {
+  visibility: hidden;
+} 
+.visible {
+  visibility: visible; /* Make the element visible */
+  opacity: 1; /* Fully opaque */
+  transition: opacity 0.5s linear; /* Smooth opacity transition */
+}    
+.start-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8); /* semi-transparent black */
+  z-index: 100; /* Make sure it covers the entire game */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-family: Arial, sans-serif;
+} 
+.start-content {
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  flex-direction: column;
+}
+
+.start-content h1 {
+  font-size: 3em;
+}
+
+.start-content p {
+  font-size: 1.5em; 
+  margin-bottom: 5vh;
+}
+
+.start-content button { 
+  text-align: center;
+  font-size: 1.2em;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer; 
+  width: 10vw; 
+  height: 7vh;  
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35), 0 8px 20px rgba(0, 0, 0, 0.35); 
+  transition: all 0.3s ease;
+}
+
+.start-content button:hover {
+  background-color: #218838; 
+  transform: scale(1.05); 
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.1); 
+}
+
+#preguess-message {  
+  margin-right: 0vw;
+  margin-top: 2vw; 
+  color: red;   
+  width: 20vw; 
+  text-align: center; 
+  font-size: 1.5vw;  
+  font-weight: 1000; 
+  user-select: none; /* For modern browsers */
+  -webkit-user-select: none; /* For Safari */
+  -moz-user-select: none; /* For Firefox */
+} 
+.guess-flexbox {  
+  display: flex; 
+  position: absolute;  
+  align-items: center; 
+  justify-content: flex-start;  
+  flex-direction: column;   
+  height: 20vh; 
+  width: 10vw;  
+  /* border: 3px solid black; */
+  z-index: 10;  
+  left: 50%;  
+  transform: translateX(-50%);
+  top: 16vh;
+}   
+.guess-flexbox button {  
+  display: block; 
+  margin: 0;
+
+}
+.guess-button {  /* actual button */
+  display: flex;
+  justify-content: center; /* Centers the button horizontally within the div */ 
+  margin-top: 0vh; 
+  position: absolute;  
+}     
+.guess-button-text{ /* text on the button */
+  font-size: 2.5vw;  
+  user-select: none; /* For modern browsers */
+  -webkit-user-select: none; /* For Safari */
+  -moz-user-select: none; /* For Firefox */ 
+}     
+#custom-checkbox {
+  display: inline-block;
+  height: 7vh;  
+  width: 9vw;  /* Background color of the custom checkbox */
+  border-radius: 5px;       /* Optional: rounded corners */
+  cursor: pointer;          /* Makes the label clickable */
+  position: relative;       /* Needed for the checkmark positioning */  
+  z-index: 100; 
+} 
+#translateCheckbox {   /* actual button */ 
+  position: absolute;
+  margin-left: 5vw;
+  height: 7vh; 
+  width: 10vw; 
+  color: white; 
+  background-color: red;  
+  margin: 0; 
+  border-radius: 0.5vw;
+} 
+#translateCheckbox:disabled { 
+  background-color: #d6d6d6; /* Color when disabled */
+  color: #a1a1a1; /* Text color when disabled */
+  cursor: not-allowed; /* Change cursor to not-allowed */
+}   
+#next-location-btn {   
+  position: relative;
+  height: 7vh; 
+  width: 10vw; 
+  z-index: 10; 
+  margin-top: 1vh; 
+  border-radius: 0.5vw;  
+}  
+.next-location {  
+  font-size: 1.3vw; 
+  font-weight: 550;
+  align-items: center; 
+  justify-content: center; 
+}
+
+.description-flexbox { /* correct location pops up once guess is made */  
+  display: flex; 
+  position: absolute;   
+  align-items: center; 
+  flex-direction: column; 
+  transition: transform 1s ease;  
+  background-color: rgb(255, 255, 255, 0.7); 
+  border-radius: 10%;
+  border: 3px solid rgb(250, 250, 250, 0.6);
+  height: 55vh; 
+  width: 50vw;  
+  margin-top: 84vh; 
+  margin-right: 40vw; 
+  /* border: 5px solid purple ; */
+}    
+.description-flexbox.translate {
+  transform: translateY(-60vh); 
+}
+.poi-description-flexbox { 
+  display: flex; 
+  position: relative;  
+  align-items: center; 
+  justify-content: center; 
+  flex-direction: column;    
+  /* border: 2px solid red;    */
+  width: 100%;  
+  height: 100%; 
+  margin-top: 0vh;
+ }
+#poi-description {  
+  padding-right: 1.7vw;   
+  padding-left: 1.7vw; 
+  padding-top: 0;
+  align-items: flex-start; 
+  text-align: center; 
+  font-size: 1.9vw; 
+  margin-top: 0vh;    
+  /* border: 2px solid black; */
+}
+/* .distance-display {  
+  position: relative;
+  height: 8vh;
+  width: 100%;  
+  align-items: center; 
+  text-align: center; 
+  justify-content: center;
+  font-size: 5vw; 
+  color: #333; 
+  font-weight: bold;
+  margin: 0;
+}    */
+.description-title-flexbox {  
+  display: flex;
+  position: relative;   
+  align-items: center;  
+  justify-content: center;
+  /* border: 2px solid black;   */
+  height: 10vh; 
+  width: 100%;  
+  margin-top: 3vh;
+} 
+#correct-answer { 
+  font-size: 2.5vw; 
+  text-align: center;
+}
+
+#distance-value { 
+  color: #ff0000; 
+  font-size: 3vw;  
+  font-weight: 500;
+  z-index: 10; 
+  text-align: center;    
+  user-select: none; /* For modern browsers */
+  -webkit-user-select: none; /* For Safari */
+  -moz-user-select: none; /* For Firefox */
+} 
+.translate {
+  transform: translateX(200px);   
+  transition: transform 0.5s ease; 
+}
+/* .description-text { 
+  font-size: 1vw; 
+  padding: 15px;  
+}    */
+
+/* Translate the element when checkbox is checked */
+#myCheckbox:checked ~ .description-flexbox {
+  transform: translateY(-60vh); /* Adjust the value for how far you want it to move */
+}   
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent scrolling when using full-page elements */
+  font-family: Arial, sans-serif;  /* Adding a global font style */
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#street-view {
+  height: 100%;  
+  position: relative;
+} 
+button {
+  width: 100px;
+  height: 25px;
+  color: white;
+  background-color: red;
+}
+
+img {
+padding-top: 10px;
+}
+
+#street-view {
+height: 100%;
+}
+
+.floating-panel-flexbox { 
+  display: flex; 
+  position: absolute;  
+  align-items: center; 
+  justify-content: center; 
+  flex-direction: column; 
+  top: 15px;
+  z-index: 5; 
+  text-align: center;
+  font-family: "Roboto", "sans-serif";
+  line-height: 30px;
+  width: 20vw;
+  height: 12vh;   
+  margin-left: 40vw;   
+  /* border: 2px solid black; */
+}     
+
+.floating-panel { 
+  display: flex;
+  position: relative;  
+  align-items: center;  
+  justify-content: center;
+  flex-direction: row;
+  z-index: 5;  
+  background-color: rgb(255, 255, 255, 0.5); 
+  padding: 5px;
+  border: 3px solid rgb(220, 220, 220, 0.8); 
+  text-align: center;
+  font-family: "Roboto", "sans-serif";
+  width: 18vw;
+  height: 10vh; 
+  font-size: 0.8vw; 
+  border-radius: 30%; 
+}   
+
+.where-am-i { 
+  position: relative;  
+  z-index: 5;  
+  padding: 10px;   
+  font-size: 1.3vw; 
+  user-select: none; /* For modern browsers */
+  -webkit-user-select: none; /* For Safari */
+  -moz-user-select: none; /* For Firefox */
+  
+}
+
+/* .tj-image {   
+  position: relative; 
+   border: 3px solid #fff; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); 
+  width: 35px; 
+  height: auto; 
+  object-fit: cover; 
+  object-position: top; 
+  overflow: hidden; 
+  margin-bottom: 1vh;
+}   */
+
+.score-flexbox {  
+  display: flex; 
+  position: absolute;  
+  align-items: center; 
+  justify-content: center; 
+  flex-direction: row;  
+  top: 0; 
+  margin-top: 3vh;
+  z-index: 5; 
+  text-align: center;
+  font-family: "Roboto", "sans-serif"; 
+  width: 15vw;  
+  height: 30vh;
+  margin-left: 1vw;     
+
+  /* border: 4px solid red; */
+}  
+.title-flexbox {  
+  display: flex; 
+  position: relative;  
+  align-items: center; 
+  justify-content: center; 
+  flex-direction: row; 
+  width: 100%; 
+  /* border: 2px solid blue;  */
+  height: 8vh; 
+  margin-top: 2vh;
+
+} 
+.points-flexbox {  
+  display: flex; 
+  position: relative;
+  align-items: center; 
+  justify-content: center; 
+  flex-direction: column;   
+  margin-top: 0vh;  
+  width: 100%; 
+  height: 10vh;  
+}
+.floating-score {
+  position: relative;   
+  top: 0px;
+  z-index: 5;
+  background-color: rgb(255, 255, 255, 0.4); 
+  text-align: center;
+  font-family: "Roboto", "sans-serif"; 
+  border: 3px solid rgb(220, 220, 220, 0.8); 
+  line-height: 30px;
+  font-size: 0.8vw; 
+  border-radius: 30%;
+  font-size: 1.0vw; 
+  height: 30vh; 
+  width: 15vw;
+}
+.score-title { 
+  font-size: 0.8vw; 
+  margin-top: 0vh; 
+  user-select: none; /* For modern browsers */
+  -webkit-user-select: none; /* For Safari */
+  -moz-user-select: none; /* For Firefox */
+}
+.poopass {    
+  align-content: center; 
+  justify-content: center;
+  height: 8vh;
+  width: 10vw; 
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  background-color: rgb(255, 255, 255, 0.3);   
+}  
+.meters-away-flexbox { 
+  display: flex; 
+  position: relative; 
+  align-items: center;  
+  justify-content: center; 
+  width: 100%;   
+
+}
+.meters-away {  
+  align-items: center; 
+  font-size: 0.8vw; 
+  margin-top: 0vh; 
+  text-align: center;  
+  width: 100%;  
+  height: 100%; 
+  user-select: none; /* For modern browsers */
+  -webkit-user-select: none; /* For Safari */
+  -moz-user-select: none; /* For Firefox */
+}
+
+.checkbox-flexbox{ 
+  display: flex; 
+  justify-content: center; 
+  align-items: center;  
+  position: absolute;
+  height: 20vh; 
+  width: 20vw; 
+  border: 2px solid black;
+}  
+
+.translateCheckbox { 
+  z-index: 10; 
+  position: absolute;  
+  margin-left: -7rem; /* Adjust as needed */
+  transition: transform 0.3s; /* Smooth transition */
+}  
+/* [END maps_streetview_embed] */ 
+
+@media (max-width: 2560px) { 
+  #poi-description {  
+    line-height: 1.3;  
+  }    
+} 
+
+@media (max-width: 1920px) { 
+  #poi-description {  
+    line-height: 1.4;  
+    font-size: 1.8vw; 
+  }    
+
+}
+
