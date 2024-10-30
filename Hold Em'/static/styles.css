@@ -311,7 +311,7 @@ justify-content: center;
 margin-bottom: 0;
 height: 80vh;   
 width: 100vw; 
-border: 2px solid red;
+/* border: 2px solid red; */
 }    
 .index-welcome { 
     z-index: 5; 
