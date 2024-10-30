@@ -1,0 +1,56 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Poker Stonks{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+
+{% extends "base.html" %} 
+{% block content %} 
+
+
+
+  <body class="register-body">  
+    <div class="register-header-flexbox"> 
+        <h1 class="register-header"> Register Here </h1>
+        <h4 class="register-sign-up">Sign Up</h4> 
+    </div>
+     
+      <form action="/register" method="post"> 
+            <div class="registration-form">
+                {{ form.hidden_tag() }}
+                <p>
+                    {{ form.username(placeholder="username", class="register-username") }}<br>
+                    {% for error in form.username.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
+                </p>
+                <p>
+                    {{ form.email(placeholder="email", class="register-email") }}<br>
+                    {% for error in form.email.errors %}
+                    <div class="registration-errors"> [{{ error }}]</div>
+                    {% endfor %}
+                </p>
+                <p>
+                    {{ form.password(placeholder="password", class="register-password-1") }}<br>
+                    {% for error in form.password.errors %}
+                    <span class="password-errors"> [{{ error }}]</span>
+                    {% endfor %}
+                </p>
+                <p>
+                    {{ form.password2(placeholder="password", class="register-password-2") }}<br>
+                    {% for error in form.password2.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
+                </p>
+                <p>{{ form.submit(class="register-submit") }}</p>   
+                <p class="backtologinregister"><a href="{{ url_for('login')}}"><a href="{{ url_for('login')}}" class="backtologinregister"> Back to Login </a></p>
+            </div>  
+               
+        </form>  
+  </body> 
+
+{% endblock %}   
+
+</html>

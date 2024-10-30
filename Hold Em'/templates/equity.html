@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Poker Stonks{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+
+
+{% extends "base.html" %} 
+{% block content %}  
+
+<body class="equity-body">  
+    <div class="equity-flexbox">
+        <h1 class="equity-header"> Equity Calculator </h1>  
+        <a href="{{ url_for('equity') }}" class="information">
+            <img src="https://static.vecteezy.com/system/resources/previews/000/442/530/original/information-vector-icon.jpg" class="information-image">
+        </a> 
+    </div>
+
+    
+    <form action="/equitycalculator" method="POST">   
+        <div class="card-flexbox">
+            <div class="card-grid">
+              <div class="card-1"> 
+                {{ card_form.hidden_tag() }}
+                
+                <div class="card-header-1">Card 1</div>
+                    
+                <div class="suit-label-1">
+                    {{ card_form.card_1_suit.label }}
+                </div>   
+
+                <div class="suit-button-1">  
+                    <div class="suit-button-container-1"> 
+                        {% for btn in card_form.card_1_suit %} 
+                            <div class="suit-button-item-1"> 
+                                <span>{{ btn }}</span>
+                                <span>{{ btn.label }}</span>
+                            </div> 
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="rank-label-1"> 
+                     Card 1 Rank 
+                </div> 
+
+                <div class="rank-button-1">
+                    <div class="rank-button-container-1">
+                        {% for btn in card_form.card_1_rank %}
+                            <div class="rank-button-item-1">
+                                <span>{{ btn }}</span>
+                                <span>{{ btn.label }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>    
+
+              </div> 
+              
+              <div class="card-2"> 
+                    
+                <div class="card-header-2">Card 2</div>
+                    
+                    <div class="suit-label-2">
+                        {{ card_form.card_2_suit.label }}
+                    </div>   
+
+                    <div class="suit-button-2">  
+                        <div class="suit-button-container-2"> 
+                            {% for btn in card_form.card_2_suit %} 
+                                <div class="suit-button-item-2"> 
+                                    <span>{{ btn }}</span>
+                                    <span>{{ btn.label }}</span>
+                                </div> 
+                            {% endfor %}
+                        </div>
+                    </div>
+                
+                    <div class="rank-label-2"> 
+                        {{ card_form.card_2_rank.label }}  
+                    </div>   
+
+                    <div class="rank-button-2">
+                        <div class="rank-button-container-2">
+                            {% for btn in card_form.card_2_rank %}
+                                <div class="rank-button-item-2">
+                                    <span>{{ btn }}</span>
+                                    <span>{{ btn.label }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>  
+              </div>  
+            </div>  
+        </div> 
+        <div> 
+            {{ card_form.submit(class="equity-submit") }} 
+        </div> 
+    </form>  
+        
+    <h2 class="your-hand"> Your Hand </h2> 
+
+    {% set card_names = {
+        'A': 'Ace',
+        'J': 'Jack',
+        'Q': 'Queen',
+        'K': 'King'
+    } %}
+
+
+
+    <div class="equity-grid"> 
+        {% if card_1_rank and card_1_suit %}
+            <h1 class="hand-1"> {{ card_names.get(card_1_rank, card_1_rank) if card_1_rank else 'No Rank' }} of {{ card_names.get(card_1_suit, card_1_suit) }}s</h1> 
+        {% else %}
+            <h1 class="hand-1"></h1>
+        {% endif %}
+
+
+        {% if card_1_rank and card_1_suit %}
+            <h1 class="hand-2"> {{ card_names.get(card_2_rank, card_2_rank) }} of {{ card_names.get(card_2_suit, card_2_suit) }}s </h1>
+        {% else %}
+            <h1 class="hand-2"></h1>
+        {% endif %}
+
+        <h1 class="equity"> Equity: {{ equity }}  </h1>   
+
+        
+    </div>    
+
+</body>
+
+
+{% endblock %} 
+</html>

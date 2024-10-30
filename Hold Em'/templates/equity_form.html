@@ -1,0 +1,27 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Form</title>
+</head>
+<body>
+    <h1>Poker Hand Equity Calculator</h1>
+    
+    <!-- Form for selecting cards -->
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <p>{{ form.card_1_rank.label }} {{ form.card_1_rank }}</p>
+        <p>{{ form.card_1_suit.label }} {{ form.card_1_suit }}</p>
+        <p>{{ form.card_2_rank.label }} {{ form.card_2_rank }}</p>
+        <p>{{ form.card_2_suit.label }} {{ form.card_2_suit }}</p>
+        <p>{{ form.submit() }}</p>
+    </form>
+
+    <!-- Conditionally display equity result -->
+    <!-- {% if equity %} -->
+        <h2>Equity Calculation Result</h2>
+        <p>Your hand has an equity of {{ equity['equity_percent'] }}% against {{ equity['num_opponents'] }} opponent(s).</p>
+    <!-- {% endif %} -->
+</body>
+</html>

@@ -1,0 +1,16 @@
+
+
+
+<div class="rank-button-1">
+    <table>
+        <tr>
+            {% for btn in card_form.card_1_rank %}
+                <td>{{ btn }}</td> <td>{{ btn.label }}&nbsp;&nbsp;</td>
+                {% if loop.index % 7 == 0 and not loop.last %}
+                    </tr> 
+                    <tr>
+                {% endif %}
+            {% endfor %}
+        </tr>
+    </table>
+</div>
