@@ -1,0 +1,21 @@
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Poker Stonks{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+
+<body class="loginfailmessagebody">
+
+  <h1 class="loginfailmessage"> Please Login or Register to Access this Page. </h1> 
+    <div class="loginfailmessagecontainer">
+      <!-- <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/862/905/068.jpg" class="login-fail-animation">  --> 
+      <img src="https://upload.wikimedia.org/wikipedia/commons/f/ff/Daniel_Negreanu_2007.jpg" class="login-fail-animation">
+      <div class="login-fail-animation" id="border-animation"></div>
+      <div><a href="{{ url_for('root_redirect')}}" class="backtologin"> Back to Login </a></div>
+    </div>   
+</body>
