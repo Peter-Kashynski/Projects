@@ -9,7 +9,7 @@ from sklearn.exceptions import DataConversionWarning
 from sklearn.model_selection import train_test_split  
 from scipy.stats import norm
 
-ndf = pd.read_csv(r"C:\Users\tak86\OneDrive\Desktop\ML algorithms\completeDF.csv") 
+ndf = pd.read_csv("data/completeDF.csv")  
 
 NX = ndf[['XPF', 'XPA']]  
 Ny = ndf['Result']  
@@ -22,7 +22,7 @@ Nmodel.fit(NX_train, Ny_train)
 Nscore = Nmodel.score(NX_test, Ny_test)  
 
 
-df = pd.read_csv(r"C:\Users\tak86\OneDrive\Desktop\ML algorithms\venueDataframe.csv")
+df = pd.read_csv('data/venueDF.csv')
 
 X = df[['XPF', 'XPA']] 
 y = df['Result'] 
@@ -66,9 +66,8 @@ def pa_prediction(avg_pa, opp_avg_pf, venue):
     return predicted_pa  
 
 
-
 # c for complete 
-cdf = pd.read_csv(r"C:\Users\tak86\OneDrive\Desktop\ML algorithms\completeDF.csv") 
+cdf = pd.read_csv("data/completeDF.csv") 
 
 from sklearn.preprocessing import OrdinalEncoder 
 result = ['L', 'W'] 
@@ -76,8 +75,6 @@ enc = OrdinalEncoder(categories = [result])
 cdf['Result'] = enc.fit_transform(cdf[['Result']]) 
 
 warnings.filterwarnings(action='ignore', category=UserWarning, module='sklearn') 
-
-
 
 def get_odds(your_team, opponent):  
     
@@ -107,8 +104,7 @@ def get_odds(your_team, opponent):
     xpa = pa_pred
 
     return winning_prob, xpf, xpa, your_apf, your_apa, opponent_apf, opponent_apa
-
-
+# print(get_odds('dal', 'nyg')) 
 
 
 def get_odds_n(your_team, opponent):
@@ -138,8 +134,7 @@ def get_odds_n(your_team, opponent):
     xpa = pa_pred
 
     return winning_prob, xpf, xpa, your_apf, your_apa, opponent_apf, opponent_apa
-
-
+# print(get_odds_n('dal', 'nyg'))
 
 
 def pf_at_least(your_team, opponent): 
@@ -158,11 +153,11 @@ def pf_at_least(your_team, opponent):
         prob = round(1 - norm.cdf(z_score).item(), 2) 
         pf_prob_list.append(prob) 
 
+    # score_prob_list = list(zip(target_score_list, prob_list)) 
     pf_prob_list = list(pf_prob_list)  
     pf_prob_list = [int(round(prob * 100, 2)) for prob in pf_prob_list]
     return pf_prob_list
-
-
+#print(pf_at_least('dal', 'nyg')) 
 
 def pa_at_least(your_team, opponent): 
     winning_prob, xpf, xpa, your_apf, your_apa, opponent_apf, opponent_apa = get_odds(your_team, opponent)   
@@ -183,7 +178,7 @@ def pa_at_least(your_team, opponent):
     pa_prob_list = list(pa_prob_list)  
     pa_prob_list = [int(round(prob * 100, 2)) for prob in pa_prob_list]
     return pa_prob_list 
-
+#print(pa_at_least('dal', 'nyg'))  
 
 
 def custom_pf_at_least(your_team, opponent, points): 
@@ -194,11 +189,13 @@ def custom_pf_at_least(your_team, opponent, points):
     sigma = 12  
     z_score = (points - xpf) / sigma
     prob = 1 - norm.cdf(z_score)  
-    prob = round(prob, 2) 
+    prob = round(prob, 2) # type: ignore
 
     return prob  
 
 
+# result = custom_pf_at_least('dal', 'nyg', 30) 
+# print(result)
 
 
 
