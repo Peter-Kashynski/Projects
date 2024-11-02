@@ -2,7 +2,7 @@
 This project is a texas hold em' website that contains some quick notes about the most important aspects of the game. 
 It features a hand calulator which displays the equity a hand has.  
 
-visit think link to explore - [https://my-hold-em-82d49baa6e75.herokuapp.com/login](url)
+visit think link to explore - https://my-hold-em-82d49baa6e75.herokuapp.com/login
 
 to run locally:  
 - install flask
