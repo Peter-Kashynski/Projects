@@ -1,8 +1,7 @@
 
 
 
-
-Hey there! Some Important notes:
+Welcome to our &Hacks X 10 project! A few notes:
 
 Go to this link to play the game!: https://mmmmmspicy.github.io ( may have to reload once)
 
