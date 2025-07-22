@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Fail</title> 
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login_fail.css') }}">
+</head>
+<body>
+    
+</body>
+</html>
+{% extends "base.html" %}
+{% block content %}
+
+<div class="login-fail-container">
+    <div class="login-fail-content">
+        <h1 class="login-fail-title">Login Failed</h1>
+        
+        <p class="login-fail-message">
+            You must be logged in to view this page
+        </p>
+
+        <div class="login-fail-actions">
+            <a href="{{ url_for('login') }}" class="try-again-button">Login</a>
+            <div class="register-link">
+                Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

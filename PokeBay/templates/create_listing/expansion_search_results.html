@@ -1,0 +1,8 @@
+
+
+
+{% for result in results %}
+<tr onclick="selectExpansion('{{ result.id }}', '{{ result.expansion }}')">
+    <td>{{ result.expansion }}</td>
+</tr>
+{% endfor %}

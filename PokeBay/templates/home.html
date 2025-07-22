@@ -1,0 +1,59 @@
+{% extends 'base.html' %}  
+{% block content %}   
+
+
+<div class="home-flexbox">
+    <!-- {% if current_user.is_authenticated %}
+        <div class="home-user-hello"> Hello, {{ current_user.username }}</div> 
+    {% endif %} -->  
+    <h1><a href="{{ url_for('marketplace') }}">Go to Marketplace</a></h1>
+
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="container">
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} mt-3" role="alert">
+            {{ message }}
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %} 
+
+    
+    <form method="post">  
+        <h3> Join a Chat Room </h3>  
+        <div class="join"> 
+            <input type="text" placeholder="Room Code" name="joincode" value="{{code}}"/>  
+            <button type="submit" name="join"> Join a Room </button>
+        </div>   
+        {% if join_room_error %} 
+        <ul> 
+            <li>{{join_room_error}}</li>
+        </ul> 
+        {% endif %} 
+        
+        <h3> Create a Chat Room </h3>    
+        <input type="text" placeholder="Choose Code" name="createcode" value="{{code}}"/>   
+        <button type="submit" name="create"> Create a Room </button>  
+
+        {% if create_room_error %} 
+        <ul> 
+            <li>{{create_room_error}}</li>
+        </ul> 
+        {% endif %}    
+
+        <h3> Send a DM </h3> 
+        <input type="text" placeholder="Recipient" name="dmrecipient"/> 
+        <button type="submit" name="dm"> Send a DM </button> 
+        {% if dm_error %} 
+        <ul> 
+            <li>{{dm_error}}</li>
+        </ul> 
+        {% endif %}    
+    </form> 
+
+</div>
+        
+{% endblock %}

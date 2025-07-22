@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Listing</title> 
+    <script src="https://unpkg.com/htmx.org@1.9.4"></script>  
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/create_listing.css') }}">  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>  
+
+    {% extends 'base.html' %} 
+    {% block content %}      
+    <div class="container mt-5">
+        <div class="create-listing-container"> 
+            <h1 class="text-center mb-4 create-listing-title">Create New Listing</h1> 
+            
+            <!-- Flash Messages --> 
+            <div class="message-box mb-4">
+                {% with messages = get_flashed_messages(with_categories=True) %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                            {% for category, message in messages %}
+                                {% if category in ['listing_error', 'listing_success'] %}
+                                    <div class="flash-message {{ category.split('_')[0] }}">
+                                        {{ message }}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %} 
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">  
+                
+                <!-- Item Title -->
+                <div class="form-group mb-3">
+                    <label class="item-title-header" for="itemtitle">Title</label> 
+                    <h6 class="item-title-subheader">Use words people would search for when looking for your item.</h6>
+                    <input type="text"  
+                           class="form-control" 
+                           oninput="capitalizeWords(this)" 
+                           id="itemtitle" 
+                           name="itemtitle" 
+                           placeholder="Enter Item Title" 
+                           maxlength="80" 
+                           required 
+                           autocomplete="off">
+                    <div class="title-character-count">0/80</div>
+                </div> 
+
+                <hr class="section-divider">
+                
+                <!-- Item Image Upload -->  
+                <div class="form-group mb-3">
+                    <label class='item-images-header' for="itempictures">Item Images</label> 
+                    <h6 class="item-images-subheader">Upload up to 10 high quality images.  Select what you want to be your main image first.</h6>
+                    <!-- <h6 class="item-images-subheader">Select what you want to be your main image first</h6> -->
+                    <div class="file-upload-container">
+                        <input type="file" 
+                               id="itempictures" 
+                               name="itempictures" 
+                               accept="image/*" 
+                               multiple 
+                               class="file-input d-none" 
+                               required>
+                        <label for="itempictures" class="file-upload-label btn btn-primary">Choose Files</label>
+                        <span class="selected-files">No files chosen</span> 
+                    </div>
+                    <!-- Container for image previews -->
+                    <div id="image-preview-container" class="mt-3">
+                        
+                    </div>
+                </div> 
+
+                <hr class="section-divider"> 
+                
+                <!-- Description -->
+                <div class="form-group mb-3"> 
+                    <label class='item-description-header'>Description</label> 
+                    <!-- <h6 class="item-description-subheader">Write a detailed description of your item.</h6>  -->
+                    <div class="description-container input-group">
+                        <textarea  
+                           class="description-input"  
+                           id="itemdescription" 
+                           name="itemdescription" 
+                           placeholder="Write a detailed description of your item." 
+                           maxlength="1000" 
+                           required 
+                           autocomplete="off"></textarea>
+                    </div> 
+                    <div class="description-character-count">0/1000</div>
+                </div>
+
+                <hr class="section-divider">
+                
+                <!-- Price -->
+                <div class="form-group mb-3">
+                    <label class='item-price-header' for="itemprice">Price</label> 
+                    <h6 class="item-price-subheader">Buyers can purchase immediately at this price.</h6>
+                    <div class="price-input-container input-group">
+                        <span class="currency-symbol input-group-text">$</span>
+                        <input type="number" 
+                            id="itemprice" 
+                            name="itemprice" 
+                            min="0" 
+                            step="0.01" 
+                            placeholder="0.00" 
+                            required 
+                            class="form-control">
+                    </div>
+                </div>    
+
+                <hr class="section-divider">
+
+                <div class="card-details-section mb-4">
+                    <h2 class='card-details-header'>Card Details</h2>
+                    <h6 class="card-details-subheader">Select specific details about your item to help buyers find it quickly.</h6>
+                    
+                    <!-- Card Name  -->
+                    <div class="form-group mb-3">
+                        <label for="cardname" id="cardname-label">Card Name</label>
+                        <input type="text"  
+                        class="form-control" 
+                           oninput="capitalizeWords(this)" 
+                               id="cardname" 
+                               name="cardname" 
+                               placeholder="Enter card name" 
+                               required 
+                               autocomplete="off">
+                    </div> 
+
+                    <!-- Card Number  -->
+                    <div class="form-group mb-3">
+                        <label for="cardnumber" id="cardnumber-label">Card Number</label>
+                        <input type="number" 
+                               class="form-control" 
+                               oninput="capitalizeWords(this)" 
+                               id="cardnumber" 
+                               name="cardnumber" 
+                               placeholder="Enter card number" 
+                               required 
+                               autocomplete="off">
+                    </div>  
+
+
+                    <!-- Card Set -->
+                    <div class="form-group mb-3"> 
+                        <label for="cardset" id="cardset-label">Card Set</label>
+                        <input type="text" class="form-control" id=cardset placeholder="Search" name="q" hx-get="/search-expansions" hx-trigger="keyup changed delay:100ms" hx-target="#results" autocomplete="off">
+                        <table class="create-listing-card-set-table mt-2">
+                            <thead>
+                            </thead>
+                            <tbody class="create-listing-set-search-results" id="results">
+                            </tbody>
+                        </table>
+                        <input type="hidden" name="selected_expansion" id="selected_expansion">
+                    </div>
+                
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <button type="submit" name="submititem" class="btn btn-primary post-item-button">Post Item</button> 
+                    </div>  
+                </div>
+            </form>  
+        </div>  
+    </div>
+
+        <script>  
+
+            // enforcing max characters on the title
+            document.addEventListener('DOMContentLoaded', function() {
+                const input = document.getElementById('itemtitle');  
+                const charCount = document.querySelector('.title-character-count');
+
+                // Update on initial load
+                updateCharCount();
+
+                // Update whenever user types
+                input.addEventListener('input', updateCharCount);
+
+                function updateCharCount() {
+                    const currentLength = input.value.length;
+                    charCount.textContent = `${currentLength}/80`;
+                }
+            }); 
+            
+            // enforcing max characters on the description
+            document.addEventListener('DOMContentLoaded', function() {
+                const input = document.getElementById('itemdescription');  
+                const charCount = document.querySelector('.description-character-count');
+
+                // Update on initial load
+                updateCharCount();
+
+                // Update whenever user types
+                input.addEventListener('input', updateCharCount);
+
+                function updateCharCount() {
+                    const currentLength = input.value.length;
+                    charCount.textContent = `${currentLength}/1000`;
+                }
+            }); 
+            
+            function selectExpansion(id, expansion) {
+              // Set the clicked expansion name in the input field
+              document.querySelector("input[name='q']").value = expansion;
+              
+              // Store the selected expansion ID in the hidden input
+              document.getElementById("selected_expansion").value = expansion;
+              
+              // Clear the search results
+              document.getElementById("results").innerHTML = "";
+        
+              // Optionally, submit the form automatically
+              // document.querySelector("form").submit();
+            } 
+            
+            // Image Preview and choosing files 
+            const fileInput = document.getElementById('itempictures');
+            const fileLabel = document.querySelector('.selected-files');
+            const imagePreviewContainer = document.getElementById('image-preview-container');
+            const maxFiles = 10; // Set your limit here
+            
+            if (fileInput && fileLabel) {  // Check if elements exist
+                fileInput.addEventListener('change', function() {
+                    // Clear previous previews
+                    imagePreviewContainer.innerHTML = '';
+
+                    if (this.files.length > maxFiles) {
+                        alert(`You can only upload a maximum of ${maxFiles} files.`);
+                        this.value = ''; // Clear the input
+                        fileLabel.textContent = 'No files chosen'; // Reset label
+                        return; // Exit the function
+                    }
+                    
+                    // Create an array to hold the names of the selected files
+                    const fileNames = Array.from(this.files).map(file => file.name);
+                    
+                    // Update the label to show the selected file names
+                    fileLabel.textContent = `${fileNames.length} file(s) selected`;
+
+                    // Loop through the selected files and create image elements
+                    Array.from(this.files).forEach(file => {
+                        const img = document.createElement('img');
+                        img.src = URL.createObjectURL(file); // Create a URL for the file
+                        img.alt = file.name; // Set alt text
+                        img.classList.add('img-preview'); // Add a class for styling (optional)
+                        img.style.maxWidth = '150px'; // Set a max width for the preview
+                        img.style.maxHeight = '150px';
+                        img.style.marginRight = '20px'; // Add some spacing
+                        img.style.marginTop = '20px';
+                        // Append the image to the preview container
+                        imagePreviewContainer.appendChild(img);
+                    });
+                });
+            } 
+            
+            function capitalizeWords(input) {
+                return input.value = input.value.toLowerCase().replace(/(^|\s)\S/g, letter => letter.toUpperCase());
+}
+
+            //  max length for the card number
+            document.addEventListener('DOMContentLoaded', function() {
+                const cardNumberInput = document.getElementById('cardnumber');
+                const maxLength = 5; 
+
+                cardNumberInput.addEventListener('input', function() {
+                    // Check if the length of the input exceeds the maximum length
+                    if (this.value.length > maxLength) {
+                        // If it does, truncate the value to the maximum length
+                        this.value = this.value.slice(0, maxLength);
+                    }
+                });
+            }); 
+
+            //  max length for the card name
+            document.addEventListener('DOMContentLoaded', function() {
+                const cardNameInput = document.getElementById('cardname');
+                const maxLength = 50; 
+
+                cardNameInput.addEventListener('input', function() {
+                    // Check if the length of the input exceeds the maximum length
+                    if (this.value.length > maxLength) {
+                        // If it does, truncate the value to the maximum length
+                        this.value = this.value.slice(0, maxLength);
+                    }
+                });
+            }); 
+
+            //  max length for the card set
+            document.addEventListener('DOMContentLoaded', function() {
+                const cardSetInput = document.getElementById('cardset');
+                const maxLength = 50; 
+
+                cardSetInput.addEventListener('input', function() {
+                    // Check if the length of the input exceeds the maximum length
+                    if (this.value.length > maxLength) {
+                        // If it does, truncate the value to the maximum length
+                        this.value = this.value.slice(0, maxLength);
+                    }
+                });
+            });
+        </script>
+    
+    {% endblock %} 
+
+    
+
+
+</body>
+</html>

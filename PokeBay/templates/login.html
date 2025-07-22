@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title> 
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    
+</body>
+</html>
+
+
+{% extends "base.html" %}
+{% block content %} 
+
+
+
+<div class="login-container">  
+    <!-- registration success message -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    {% if category == 'register-success' %}
+                        <div class="flash-message success">
+                            {{ message }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %} 
+    
+    <h1 class="login-title">Login to Your Account</h1>
+    
+    <form method="POST" class="login-form">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-input", placeholder="Enter your email") }}
+            {% if form.email.errors %}
+                {% for error in form.email.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-input", placeholder="Enter your password") }}
+            {% if form.password.errors %}
+                {% for error in form.password.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        {{ form.submit(class="login-button") }}
+
+        <div class="register-link">
+            Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
+        </div>
+    </form> 
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    {% if category == 'error' %}  <!-- Check if the category is 'error' -->
+                        <div class="flash-message {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+
+{% endblock %}

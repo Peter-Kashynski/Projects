@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Card Marketplace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="{{ url_for('marketplace') }}" class="nav-logo">PokeBay</a>
+        </div>
+        
+        <div class="nav-center">
+            <form action="{{ url_for('search') }}" method="GET" class="search-form">
+                <input type="search" 
+                       name="query" 
+                       placeholder="Search for cards..." 
+                       class="search-input"
+                       id="searchInput"
+                       required 
+                       autocomplete="off">
+                <button type="submit" class="search-button">Search</button>
+            </form>
+        </div>
+
+        <div class="nav-right">
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('marketplace') }}" class="nav-link base-user-marketplace">Marketplace</a>
+                <div class="base-user-create-listing"> 
+                    <a href="{{ url_for('create_listing') }}" class="nav-link">Create Listing</a>
+                </div>
+                <div class="user-menu">
+                    <div class="user-menu-trigger username-button">
+                        <a href="{{ url_for('your_listings', username=current_user.username) }}" class="nav-link base-username">{{ current_user.username }}</a>
+                    </div>
+                    <div class="dropdown-menu"> 
+                        <a href="{{ url_for('your_listings', username=current_user.username) }}" class="dropdown-item" id="dropdown-listings">Your Listings</a>
+                        <a href="{{ url_for('sold_items', username=current_user.username) }}" class="dropdown-item dropdown-logout">Sold Items</a>
+                        {% if current_user.shipping_address %} 
+                            <a href="{{ url_for('shipping_address') }}" class="dropdown-item dropdown-logout">Update Address</a>
+                        {% else %} 
+                            <a href="{{ url_for('shipping_address') }}" class="dropdown-item dropdown-logout">Add Address</a>
+                        {% endif %}
+                        <a href="{{ url_for('logout') }}" class="dropdown-item dropdown-logout">Logout</a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                <a href="{{ url_for('register') }}" class="nav-link register-button">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

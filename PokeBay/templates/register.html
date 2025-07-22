@@ -1,0 +1,90 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Poker Stonks{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+  </head>
+
+{% extends "base.html" %} 
+{% block content %} 
+
+<div class="register-container">
+    <h1 class="register-title">Create Account</h1>
+    
+    <form method="POST" class="register-form">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            {{ form.username.label(class="form-label") }}
+            {{ form.username(class="form-input", placeholder="Choose a username") }}
+            {% if form.username.errors %}
+                {% for error in form.username.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-input", placeholder="Enter your email") }}
+            {% if form.email.errors %}
+                {% for error in form.email.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div> 
+
+        <!-- <div class="form-group">
+            {{ form.shipping_address.label(class="form-label") }}
+            {{ form.shipping_address(class="form-input", placeholder="You can enter this later") }}
+            {% if form.shipping_address.errors %}
+                {% for error in form.shipping_address.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div> -->
+
+        <div class="form-group">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-input", placeholder="Create a password") }}
+            {% if form.password.errors %}
+                {% for error in form.password.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {{ form.password2.label(class="form-label") }}
+            {{ form.password2(class="form-input", placeholder="Confirm your password") }}
+            {% if form.password2.errors %}
+                {% for error in form.password2.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        {{ form.submit(class="create-account-register-button") }}
+
+        <div class="login-link">
+            Already have an account? <a href="{{ url_for('login') }}">Login here</a>
+        </div>
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message error">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+
+{% endblock %}   
+
+</html>

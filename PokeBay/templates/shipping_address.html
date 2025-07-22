@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Address</title> 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    
+</body>
+</html>
+
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="text-center mb-4">Update Shipping Address</h2>
+                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    {% if current_user.shipping_address %} 
+                        <form method="POST">
+                            <div class="mb-3 text-center"> 
+                                <label for="address" class="form-label d-block" style="max-width: 700px; margin-bottom: 10px;">
+                                    This will be the exact address sellers ship items to, so make sure it's correct!<br>
+                                    Please include: Full Name, Street address, Apartment/Unit number (if applicable), City, State, ZIP code, and Country.<br>
+                                    Example: Bobby Mack, 123 Main Street, Apt 4B, New York, NY 10001, USA
+                                </label>
+                                <textarea 
+                                    class="form-control" 
+                                    id="address" 
+                                    name="address" 
+                                    required 
+                                    maxlength="128"
+                                    style="width: 100%; max-width: 700px; margin: 0 auto; display: block; min-height: 50px; max-height: 100px; resize: vertical;">{{ current_user.shipping_address }}</textarea>
+                            </div>
+                            <div class="d-grid" style="max-width: 200px; margin: 0 auto;">
+                                <button type="submit" class="btn btn-primary">Save Address</button>
+                            </div>
+                        </form>  
+                    {% else %}
+                        <form method="POST">
+                            <div class="mb-3 text-center"> 
+                                
+                                <label for="address" class="form-label d-block" style="max-width: 700px; margin-bottom: 10px;">
+                                    This will be the exact address sellers ship items to, so make sure it's correct!<br>
+                                    Please include: Street address, Apartment/Unit number (if applicable), City, State, ZIP code, and Country.<br>
+                                    Example: 123 Main Street, Apt 4B, New York, NY 10001, USA
+                                </label>
+                                <input type="text" 
+                                    class="form-control" 
+                                    id="address" 
+                                    name="address" 
+                                    required 
+                                    placeholder="Enter your full shipping address"
+                                    style="width: 100%; max-width: 400px; margin: 0 auto; display: block;">
+                            </div>
+                            <div class="d-grid" style="max-width: 400px; margin: 0 auto;">
+                                <button type="submit" class="btn btn-primary">Save Address</button>
+                            </div>
+                        </form> 
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
