@@ -24,30 +24,29 @@ app.config["SECRET_KEY"] = 'glitter8831'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///myDB.db' 
 app.config['UPLOAD_FOLDER'] = 'static/uploads'  # Folder where images will be saved
 app.config['ALLOWED_EXTENSIONS'] = {
-    'png',    # Portable Network Graphics
-    'jpg',    # JPEG
-    'jpeg',   # JPEG (alternative extension)
-    'webp',   # WebP (modern format, better compression)
-    'bmp',    # Bitmap
-    'tiff',   # Tagged Image File Format
-    'tif',    # TIFF (alternative extension)
-    'svg',    # Scalable Vector Graphics
-    'ico',    # Icon files
-    'heic',   # High Efficiency Image Format
-    'heif',    # High Efficiency Image Format (alternative extension) 
+    'png',    
+    'jpg',   
+    'jpeg',  
+    'webp',   
+    'bmp',  
+    'tiff',  
+    'tif',   
+    'svg',    
+    'ico',   
+    'heic',   
+    'heif',    
     'html',
-}  # Allowed image formats
+}  
 
 socketio = SocketIO(app)   
 
 db = SQLAlchemy(app)  
 
-
 login_manager = LoginManager()
 login_manager.init_app(app) 
 login_manager.login_view = 'login' # type: ignore
 login_manager.login_message = "Please log in to access this page."  
-# csrf = CSRFProtect(app)
+csrf = CSRFProtect(app)
 
 class User(UserMixin, db.Model):
   id = db.Column(db.Integer, primary_key=True)
@@ -109,20 +108,6 @@ def load_user(user_id):
 def unauthorized(): 
     return render_template('loginfail.html')
 
-rooms = {} 
-dms = defaultdict(list)
-def generate_unique_code(length):  
-    while True:
-        code = ''  
-        for _ in range(length):
-            code += random.choice(ascii_uppercase) 
-
-        if code not in rooms: 
-            break 
-
-    return code 
-
-# redirect to login page if user goes to the root 
 @app.route('/') 
 def root(): 
     return redirect(url_for('login'))  
@@ -167,14 +152,6 @@ def register():
         flash("Registration successful! You can now log in.", "register-success")
         return redirect(url_for('login'))  
     return render_template('register.html', form=form) 
-    
-@app.route('/room')  
-@login_required
-def room():  
-    room = session.get("room") 
-    if room is None or session.get('name') is None or room not in rooms: # make sure you cant go directly to the /room route 
-        return redirect(url_for("home"))
-    return render_template('room.html', code=room, messages=rooms[room]['messages'])   
 
 def allowed_file(filename):
     """Check if the file has an allowed extension."""
@@ -338,16 +315,6 @@ def search_expansions():
         results = []
 
     return render_template("create_listing/expansion_search_results.html", results=results) 
-
-@app.route('/magnify')
-def test_magnify(): 
-    return render_template("testMagnify.html") 
-
-
-@app.route('/test-thank-you', methods=['GET'])  
-def thank_you(): 
-    return render_template("test-shite/thankyou.html")  
-
 
 import stripe 
 app.config["STRIPE-PK"] = os.environ.get('STRIPE_PK')
