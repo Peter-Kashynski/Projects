@@ -1,0 +1,65 @@
+.scroll-row {
+    display: flex;
+    overflow-x: auto;
+    gap: 2rem;
+    padding: 0rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+/* Hide scrollbar for Chrome/Safari/Opera */
+.scroll-row::-webkit-scrollbar {
+    height: 6px;
+}
+
+.scroll-row::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.scroll-row::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.card {
+    flex: 0 0 auto;
+    width: 280px; 
+    /* border: 2px solid red; */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    /* transform: translateY(-5px); */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card:hover .card-img-top {
+    transform: scale(1.03);
+}
+
+.card:hover .card-body {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.card-img-top {
+    height: 250px;
+    object-fit: cover;
+    transition: transform 0.2s;
+}
+
+.card-set-header { 
+    font-weight: 700;
+}  
+
+#marketplace-header { 
+    font-weight: 700; 
+    margin-top: 3rem; 
+    font-size: 3.5rem;
+}
+
+.container { 
+    width: 200rem; 
+    /* border: 2px solid red; */
+} 
+

@@ -1,0 +1,48 @@
+:root {
+    --gray-color: rgb(77, 77, 77); /* Another reusable color */
+} 
+
+.your-items-header { 
+    margin-top: 4rem;   
+    font-size: 3rem;
+    /* border: 2px solid black; */
+} 
+
+.margin-bottom { 
+    margin-bottom: 100px;
+} 
+
+.card-body {   
+    /* border: 2px solid green;  */
+    margin: 0;
+}  
+.card-img-top {
+    transition: transform 0.3s ease-in-out;
+}
+
+.card:hover .card-img-top {
+    transform: scale(1.03);
+}
+
+.profile-item-description-subbox { 
+    display: flex; 
+    flex-direction: row;   
+    width: 100%; 
+    margin: 0;
+    flex-wrap: wrap; /* Allow items to wrap to next line */
+    gap: 0.5rem; /* Add spacing between wrapped items */
+}
+
+.profile-item-description-subbox p {
+    flex: 1 1 auto; /* Allow items to grow and shrink, but maintain auto basis */
+    min-width: 0; /* Allow text to wrap */
+    margin: 0; /* Remove default margins */
+    word-wrap: break-word; /* Ensure long words break and wrap */
+}
+
+.profile-item-description-time { 
+    display: flex;  
+    justify-content: flex-end;
+    color: var(--gray-color);
+    font-size: 0.9rem; /* Slightly smaller font for the date */
+}
