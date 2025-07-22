@@ -1,0 +1,278 @@
+:root {
+    --gray-color: rgb(77, 77, 77); /* Another reusable color */
+}
+/* Create Listings page */   
+.form-group { 
+    /* border: 2px solid red;  */
+    width: 40rem;
+}
+.create-listing-container{ 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    flex-direction: column; 
+    /* border: 2px solid red; */
+}
+.create-listing-title { 
+    font-size: 2.5vw;  
+    text-align: center; 
+    margin-top: 0; 
+    margin-bottom: 0vh;
+}  
+
+.post-item-button { 
+    margin-bottom: 10rem;
+}
+.create-listing-item-form-errors { 
+    margin-top: 2vh; 
+    font-size: 1vw; 
+    text-align: center;
+}
+.create-listing-submit-item-flexbox { 
+    display: flex;  
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center;  
+    margin-left: auto; 
+    margin-right: auto;
+    width: 13vw;
+    /* border: 2px solid black; */
+}    
+.item-title-header{ 
+    font-weight: 600; 
+    font-size: 1.8rem; 
+    margin-top: 3rem;
+    margin-bottom: 0.5rem; 
+}  
+.item-title-subheader{ 
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+} 
+
+.title-character-count { 
+    margin-top: 0.2rem;  
+    margin-bottom: 1rem;
+    color: var(--gray-color);
+}  
+
+.section-divider{ 
+    margin-top: 3rem;
+}
+
+.item-images-header { 
+    font-weight: 600; 
+    font-size: 1.8rem; 
+    margin-top: 1rem;
+    margin-bottom: 0.3rem;
+} 
+.item-images-subheader { 
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}  
+.img-preview {
+    border: 1px solid #ccc; /* Optional border */
+    border-radius: 4px; /* Optional rounded corners */
+} 
+
+.item-description-header { 
+    font-weight: 600; 
+    font-size: 1.8rem; 
+    margin-top: 1rem;
+    margin-bottom: 0.3rem;
+} 
+.item-description-subheader { 
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}   
+.description-input { 
+    width: 100%; 
+    height: 10rem;  
+    border-radius: 16px;
+    border: 1px solid #ced4da !important; /* Override Bootstrap's border */
+    text-align: start;
+    vertical-align: top;
+    padding: 1rem;
+    resize: none; /* Prevent manual resizing */
+} 
+.description-character-count { 
+    margin-top: 0.2rem;  
+    margin-bottom: 1rem;
+    color: var(--gray-color);
+}
+
+.item-price-header { 
+    font-weight: 600; 
+    font-size: 1.8rem; 
+    margin-top: 2rem;
+    margin-bottom: 0.3rem;
+} 
+
+.item-price-subheader { 
+    font-size: 1rem;
+    margin-bottom: 1rem;
+} 
+
+.card-details-header { 
+    font-weight: 600; 
+    font-size: 1.8rem; 
+    margin-top: 3rem;
+    margin-bottom: 0.6rem;
+}   
+
+.card-details-subheader { 
+    font-size: 1rem;
+    margin-bottom: 1rem; 
+    margin-top: 1rem;
+}  
+
+.cardset-label { 
+    margin-bottom: 1rem; 
+} 
+
+.cardname-label { 
+    margin-bottom: 1rem; 
+} 
+
+.cardnumber-label { 
+    margin-bottom: 1rem; 
+}
+
+.error-message {
+    color: #dc2626;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+.flash-messages {
+    margin-top: 1.5rem;
+}
+
+.flash-message {
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.flash-message.success {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.flash-message.error {
+    background-color: #fee2e2;
+    color: #991b1b;
+}  
+
+.message-box { 
+    width: 40rem;
+}
+
+
+
+
+
+
+
+.create-listing-your-descriptive-title-input { 
+    text-align: center;
+}  
+.create-listing-upload-picture-title { 
+    text-align: center; 
+    font-size: 1vw; 
+    margin-bottom: 1.5vh;
+} 
+.create-listing-upload-picture-input { 
+    text-align: center; 
+} 
+.create-listing-item-price-title { 
+    text-align: center; 
+    font-size: 1vw; 
+    margin-bottom: 1.5vh;
+} 
+.create-listing-item-price-input { 
+    text-align: center;
+} 
+
+.create-listing-card-name-title { 
+    text-align: center; 
+    font-size: 1vw; 
+    margin-bottom: 1.5vh;
+}  
+.create-listing-card-name-input { 
+    text-align: center;
+} 
+.create-listing-card-number-title { 
+    text-align: center; 
+    font-size: 1vw; 
+    margin-bottom: 1.5vh;
+} 
+.create-listing-card-number-input { 
+    text-align: center;
+} 
+.create-listing-card-set-title { 
+    text-align: center; 
+    font-size: 1vw; 
+    margin-bottom: 1.5vh;
+} 
+.create-listing-card-set-input { 
+    text-align: center;
+}    
+.create-listing-card-set-table {
+    width: 100%;
+    margin-top: 0.5rem;
+    border-collapse: collapse;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.create-listing-card-set-table tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+}
+
+.create-listing-card-set-table tr:last-child {
+    border-bottom: none;
+}
+
+.create-listing-card-set-table td {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.create-listing-card-set-table tr:hover {
+    background-color: #f8fafc;
+}
+
+#expansion-results {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: white;
+}
+
+.create-listing-set-search-results tr:hover {
+    background-color: rgb(146, 206, 226);
+    cursor: pointer;
+  }
+.create-listing-post-item-button { 
+    text-align: center; 
+    margin-top: 1vh; 
+    margin-bottom: 0;
+}  
+
+.file-upload-container {
+    display: flex; /* Use flexbox */
+    justify-content: space-between; /* Space between items */
+    align-items: center; /* Center items vertically */
+}
+
+.selected-files {
+    margin-left: auto; /* Push the text to the right */
+}
