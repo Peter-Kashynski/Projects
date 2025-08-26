@@ -46,6 +46,24 @@ The front end is designed with Bootstrap and custom CSS, featuring responsive la
 <img width="1900" height="867" alt="PokeBayMarketplace" src="https://github.com/user-attachments/assets/4393312a-a2e3-4d26-9725-5ac778e8e8cc" />
 <img width="1900" height="867" alt="PokeBayCardPage" src="https://github.com/user-attachments/assets/adfa5fd3-77de-4008-9cc2-b15936c68639" />
 
+# NFL Predictor — Machine Learning Project
+
+A machine-learning project designed to predict NFL game outcomes using real-world data and statistical models.  
+Built with **Python, Scikit-Learn, and BeautifulSoup**, the project combines data scraping, feature engineering, and predictive modeling to deliver accurate results and visual insights.
+
+## Features
+- **Data Collection & Parsing**: Scraped and parsed real NFL data with BeautifulSoup, transforming raw information into structured DataFrames in Jupyter Notebook.  
+- **Predictive Modeling**: Implemented linear and logistic regression models with Scikit-Learn, achieving predictions within 5 points of the actual value **81% of the time**.  
+- **Front-End Visualization**: Designed a responsive and user-friendly interface with HTML and CSS to present predictions and insights in an engaging way.  
+
+## Tech Stack
+- **Data Scraping & Processing:** Python, BeautifulSoup, Pandas  
+- **Machine Learning:** Scikit-Learn (Linear Regression, Logistic Regression)  
+- **Front End:** HTML, CSS  
+- **Environment:** Jupyter Notebook  
+<img width="1900" height="1039" alt="NFLPredictorMainPage" src="https://github.com/user-attachments/assets/0cb04fb1-f276-4402-b0aa-fa95c787372d" />
+<img width="1900" height="1039" alt="NFLPredictorStats" src="https://github.com/user-attachments/assets/6f2d5f8c-730d-4174-b25b-4274798ddab7" />
+
 
 
 
