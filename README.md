@@ -41,8 +41,10 @@ The front end is designed with Bootstrap and custom CSS, featuring responsive la
 - **Back End:** Flask, SQLAlchemy  
 - **Database:** PostgreSQL  
 - **Payments:** Stripe API  
-- **Version Control:** Git & GitHub  
-
+- **Version Control:** Git & GitHub
+<img width="1897" height="865" alt="PokeBayUserListings" src="https://github.com/user-attachments/assets/ad769c65-4e7c-4e02-80b8-465417b9a1f9" />
+<img width="1900" height="867" alt="PokeBayMarketplace" src="https://github.com/user-attachments/assets/4393312a-a2e3-4d26-9725-5ac778e8e8cc" />
+<img width="1900" height="867" alt="PokeBayCardPage" src="https://github.com/user-attachments/assets/adfa5fd3-77de-4008-9cc2-b15936c68639" />
 
 
 
