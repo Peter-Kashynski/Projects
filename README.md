@@ -21,8 +21,13 @@ Contributed to core game logic on both the front and back end to ensure accurate
 
 # Trading Card Marketplace — Full Stack Web Application
 
-A secure e-commerce platform for trading cards, built with Flask and SQLAlchemy.  
-Features robust authentication, real-time search, and secure payment integration.
+A secure full-stack e-commerce platform designed for buying, selling, and trading cards, built with Flask and SQLAlchemy.
+The application provides a seamless experience with robust user authentication, real-time search functionality, and integrated payment processing.
+
+Users can create accounts, browse and filter dynamic listings, and securely complete transactions through the Stripe API, which handles session-based checkout, webhooks, and payment confirmations.
+A normalized PostgreSQL database manages user profiles, listings, transactions, and item availability, ensuring data consistency and scalability.
+
+The front end is designed with Bootstrap and custom CSS, featuring responsive layouts, image carousels, dropdown menus, and paginated listings for smooth navigation and usability.
 
 ## Features
 - Full user authentication with session handling  
