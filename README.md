@@ -17,9 +17,26 @@ Contributed to core game logic on both the front and back end to ensure accurate
 - **Version Control:** Git & GitHub  
 - **Collaboration:** Pair programming, Git branching, team planning
 
+<img width="1914" height="862" alt="image" src="https://github.com/user-attachments/assets/fa3c93e1-e5df-4f84-88f3-25de5ada9ab5" /> 
 
+# Trading Card Marketplace — Full Stack Web Application
 
-<img width="1914" height="862" alt="image" src="https://github.com/user-attachments/assets/fa3c93e1-e5df-4f84-88f3-25de5ada9ab5" />
+A secure e-commerce platform for trading cards, built with Flask and SQLAlchemy.  
+Features robust authentication, real-time search, and secure payment integration.
+
+## Features
+- Full user authentication with session handling  
+- Dynamic listings with real-time search and filtering  
+- **Stripe API integration** for secure payment processing (checkout sessions, webhooks, and payment confirmations)  
+- Normalized **PostgreSQL database** with SQLAlchemy ORM for managing listings, users, transactions, and availability  
+- Responsive UI with **Bootstrap + custom CSS**, including image carousels, dropdowns, and paginated listings  
+
+## Tech Stack
+- **Front End:** Bootstrap, Custom CSS  
+- **Back End:** Flask, SQLAlchemy  
+- **Database:** PostgreSQL  
+- **Payments:** Stripe API  
+- **Version Control:** Git & GitHub  
 
 
 
