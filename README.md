@@ -60,9 +60,9 @@ Built with **Python, Scikit-Learn, and BeautifulSoup**, the project combines dat
 - **Data Scraping & Processing:** Python, BeautifulSoup, Pandas  
 - **Machine Learning:** Scikit-Learn (Linear Regression, Logistic Regression)  
 - **Front End:** HTML, CSS  
-- **Environment:** Jupyter Notebook  
-
-<img width="1833" height="1016" alt="NFLPredictorMainPage" src="https://github.com/user-attachments/assets/ba3f46b3-c2d0-4182-9941-c667c49cac2f" />
+- **Environment:** Jupyter Notebook
+  
+<img width="1263" height="843" alt="NFLPredictorMainPage" src="https://github.com/user-attachments/assets/7e6fcbd4-caa6-4115-80b3-f1c33eab6f68" />
 <img width="1849" height="835" alt="NFLPredictorStats" src="https://github.com/user-attachments/assets/89427634-2394-43b1-8c7f-36ec04db8106" />
 
 
