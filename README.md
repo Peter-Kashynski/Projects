@@ -20,7 +20,7 @@ Contributed to core game logic on both the front and back end to ensure accurate
 <img width="1914" height="862" alt="image" src="https://github.com/user-attachments/assets/fa3c93e1-e5df-4f84-88f3-25de5ada9ab5" /> 
 
 
-# Meme Coin Strategy Tester: Solana strategy desk
+# Solana Trading Strategy Platform
 ## Full Stack Web Application — Simulate, Paper, and Live Trading
 
 Built a Flask trading server for testing token strategies before spending SOL. Designed the interface in HTML, CSS, and JavaScript, with open positions, a filterable event log, and strategy settings updated from a live server-sent stream.
