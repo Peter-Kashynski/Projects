@@ -198,10 +198,11 @@ const poi_list =  [
   
   let markers = [];
   
-  // Google Maps API setup  
+  // Google Maps API setup
   const { Map } = await google.maps.importLibrary("maps");
   const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-  
+  const { StreetViewPanorama, StreetViewService } = await google.maps.importLibrary("streetView");
+
   const myLatLng = { lat: 37.2706829, lng: -76.7159741 };
   const map = new Map(document.getElementById("minimap"), {
     center: myLatLng,
@@ -224,6 +225,50 @@ const poi_list =  [
     map: null, // Initially null; it will be set when we reveal the location
   });
   
+  let panorama;
+
+  const panoramaOptions = {
+    linksControl: false,
+    panControl: true,
+    enableCloseButton: false,
+    fullscreenControl: false,
+    addressControl: false,
+    showRoadLabels: false,
+    clickToGo: false,
+    zoomControl: false,
+  };
+
+  // Building coordinates are often off the road. Snap to the nearest photo
+  // so the main view is an actual Street View image.
+  async function showStreetView(position) {
+    const container = document.getElementById("map");
+    let panoId = null;
+
+    try {
+      const { data } = await new StreetViewService().getPanorama({
+        location: position,
+        radius: 200,
+        source: google.maps.StreetViewSource.OUTDOOR,
+        preference: google.maps.StreetViewPreference.NEAREST,
+      });
+      panoId = data.location.pano;
+    } catch (err) {
+      console.warn("No nearby Street View panorama", err);
+    }
+
+    const viewOptions = panoId
+      ? { ...panoramaOptions, pano: panoId }
+      : { ...panoramaOptions, position };
+
+    if (!panorama) {
+      panorama = new StreetViewPanorama(container, viewOptions);
+    } else if (panoId) {
+      panorama.setPano(panoId);
+    } else {
+      panorama.setPosition(position);
+    }
+  }
+
   // Function to initialize the game
   function initialize() { 
     if (!random_location) {
@@ -231,24 +276,7 @@ const poi_list =  [
     }
     
     clear_markers();
-    
-    let panorama = new google.maps.StreetViewPanorama(
-        document.getElementById("map"),
-          {  
-            position: random_location,
-            linksControl: false,
-            panControl: true,
-            enableCloseButton: false,
-            fullscreenControl: false,
-            addressControl: false,
-            showRoadLabels: false,
-            clickToGo: false,
-            zoomControl: false,
-            zoomControlOptions: {
-                position: google.maps.ControlPosition.TOP_LEFT,
-            }
-          },
-    );
+    showStreetView(random_location);
   
     map.addListener("click", (mapsMouseEvent) => {
         marker.setMap(null);
@@ -325,24 +353,7 @@ const poi_list =  [
     // descriptionBox.classList.remove("hidden"); 
     descriptionBox.classList.remove("translate");  
   
-    // Reinitialize the Street View with the new location
-    let panorama = new google.maps.StreetViewPanorama(
-      document.getElementById("map"),
-      {
-        position: random_location,
-        linksControl: false,
-        panControl: true,
-        enableCloseButton: false,
-        fullscreenControl: false,
-        addressControl: false,
-        showRoadLabels: false,
-        clickToGo: false,
-        zoomControl: false,
-        zoomControlOptions: {
-          position: google.maps.ControlPosition.TOP_LEFT,
-        },
-      }
-    );
+    showStreetView(random_location);
     
     rndmarker.setMap(null); // Hide the previous random location marker
   }
@@ -488,7 +499,7 @@ const poi_list =  [
       label.disabled = false;
       guessButton.removeAttribute("hidden");
       guessButton.disabled = false; 
-      message.style.display = "none"; 
+      if (message) message.style.display = "none"; 
   });
   } // Close the enableMap function
   
