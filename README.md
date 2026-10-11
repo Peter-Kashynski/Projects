@@ -66,19 +66,19 @@ Built with **Python, Scikit-Learn, and BeautifulSoup**, the project combines dat
 <img width="1849" height="835" alt="NFLPredictorStats" src="https://github.com/user-attachments/assets/89427634-2394-43b1-8c7f-36ec04db8106" />
 
 # Strategy Tester: Solana strategy desk
-## Full Stack Web Application
+## Full Stack Web Application — Simulate, Paper, and Live Trading
 
-Built a Flask trading server for testing token strategies before spending SOL. The same rules run in three modes: a synthetic market, paper trading on a live feed, and real on-chain buys and sells. The interface is HTML, CSS, and JavaScript, with open positions, a filterable event log, and strategy settings updated from a server-sent stream.
+Built a Flask trading server for testing token strategies before spending SOL. Designed the interface in HTML, CSS, and JavaScript, with open positions, a filterable event log, and strategy settings updated from a live server-sent stream.
 
-Integrated PumpPortal’s WebSocket feed and local-trade API. Live orders are signed as Solana versioned transactions with solders and confirmed through Helius RPC by reading the wallet’s balance change. Each account keeps its own strategy presets in SQLite.
+Integrated PumpPortal’s WebSocket feed and local-trade API so the same rules can run as a synthetic market, as paper fills, or as real on-chain buys and sells. Live orders are signed with solders and confirmed through Helius RPC, and each account keeps its strategy presets in SQLite.
 
 ## Technologies Used
 
-- **Front End:** HTML, CSS, JavaScript
-- **Back End:** Flask, gunicorn
-- **Data:** SQLite
-- **Chain:** Solana, PumpPortal, Helius, solders
-- **Version Control:** Git & GitHub
+- **Front End:** HTML, CSS, JavaScript  
+- **Back End:** Flask, gunicorn  
+- **Data:** SQLite  
+- **Chain:** Solana, PumpPortal, Helius, solders  
+- **Version Control:** Git & GitHub  
 
 
 
