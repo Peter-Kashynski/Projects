@@ -65,6 +65,23 @@ Built with **Python, Scikit-Learn, and BeautifulSoup**, the project combines dat
 <img width="1263" height="843" alt="NFLPredictorMainPage" src="https://github.com/user-attachments/assets/7e6fcbd4-caa6-4115-80b3-f1c33eab6f68" />
 <img width="1849" height="835" alt="NFLPredictorStats" src="https://github.com/user-attachments/assets/89427634-2394-43b1-8c7f-36ec04db8106" />
 
+# Strategy Tester — Full Stack Web Application
+
+A Flask trading desk for testing Solana token strategies in three modes: a synthetic market, paper trading on a live feed, and real on-chain buys and sells.
+
+## Features
+- Simulate, paper, and live modes that share one strategy model (market-cap bounds, holder filters, ATH stop-loss, and stagnation exits)
+- PumpPortal WebSocket feed and local-trade API, with Solana versioned transactions signed using solders
+- Helius RPC for submitting transactions and reading confirmed fills
+- Per-account strategy presets stored in SQLite, with bot state streamed to the browser over server-sent events
+
+## Tech Stack
+- **Front End:** HTML, CSS, JavaScript
+- **Back End:** Flask, gunicorn
+- **Data:** SQLite
+- **Chain:** Solana, PumpPortal, Helius
+- **Version Control:** Git & GitHub
+
 
 
 
