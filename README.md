@@ -19,6 +19,24 @@ Contributed to core game logic on both the front and back end to ensure accurate
 
 <img width="1914" height="862" alt="image" src="https://github.com/user-attachments/assets/fa3c93e1-e5df-4f84-88f3-25de5ada9ab5" /> 
 
+
+# Meme Coin Strategy Tester: Solana strategy desk
+## Full Stack Web Application — Simulate, Paper, and Live Trading
+
+Built a Flask trading server for testing token strategies before spending SOL. Designed the interface in HTML, CSS, and JavaScript, with open positions, a filterable event log, and strategy settings updated from a live server-sent stream.
+
+Integrated PumpPortal’s WebSocket feed and local-trade API so the same rules can run as a synthetic market, as paper fills, or as real on-chain buys and sells. Live orders are signed with solders and confirmed through Helius RPC, and each account keeps its strategy presets in SQLite.
+
+## Technologies Used
+
+- **Front End:** HTML, CSS, JavaScript  
+- **Back End:** Flask, gunicorn  
+- **Data:** SQLite  
+- **Chain:** Solana, PumpPortal, Helius, solders  
+- **Version Control:** Git & GitHub
+
+<img width="1651" height="1311" alt="image" src="https://github.com/user-attachments/assets/d528b823-7adc-4df9-a81f-255d07ab724f" />
+
 # Trading Card Marketplace — Full Stack Web Application
 
 A secure full-stack e-commerce platform designed for buying, selling, and trading cards, built with Flask and SQLAlchemy.
@@ -65,20 +83,6 @@ Built with **Python, Scikit-Learn, and BeautifulSoup**, the project combines dat
 <img width="1263" height="843" alt="NFLPredictorMainPage" src="https://github.com/user-attachments/assets/7e6fcbd4-caa6-4115-80b3-f1c33eab6f68" />
 <img width="1849" height="835" alt="NFLPredictorStats" src="https://github.com/user-attachments/assets/89427634-2394-43b1-8c7f-36ec04db8106" />
 
-# Strategy Tester: Solana strategy desk
-## Full Stack Web Application — Simulate, Paper, and Live Trading
-
-Built a Flask trading server for testing token strategies before spending SOL. Designed the interface in HTML, CSS, and JavaScript, with open positions, a filterable event log, and strategy settings updated from a live server-sent stream.
-
-Integrated PumpPortal’s WebSocket feed and local-trade API so the same rules can run as a synthetic market, as paper fills, or as real on-chain buys and sells. Live orders are signed with solders and confirmed through Helius RPC, and each account keeps its strategy presets in SQLite.
-
-## Technologies Used
-
-- **Front End:** HTML, CSS, JavaScript  
-- **Back End:** Flask, gunicorn  
-- **Data:** SQLite  
-- **Chain:** Solana, PumpPortal, Helius, solders  
-- **Version Control:** Git & GitHub  
 
 
 
