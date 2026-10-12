@@ -141,6 +141,17 @@ class StrategyParams:
             )
         return None
 
+    def stoploss_ratio_error(self) -> str | None:
+        checks = (
+            (self.use_stoploss_entry, self.stoploss_entry_ratio, "Stoploss vs entry"),
+            (self.use_stoploss_ath_low, self.stoploss_ath_low, "Stoploss vs ATH"),
+            (self.use_stoploss_ath_high, self.stoploss_ath_high, "Stoploss vs ATH (high MC)"),
+        )
+        for enabled, ratio, label in checks:
+            if enabled and not ratio < 1.0:
+                return f"{label} ratio must be less than 1.00 (got {ratio:.2f})."
+        return None
+
 
 @dataclass
 class TradeRecord:

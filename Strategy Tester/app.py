@@ -361,7 +361,7 @@ def api_start():
         return jsonify({"ok": False, "message": busy, "state": bot.snapshot()}), 400
     data = request.get_json(silent=True) or {}
     params = StrategyParams.from_dict(data)
-    mc_err = params.high_mc_exit_error()
+    mc_err = params.high_mc_exit_error() or params.stoploss_ratio_error()
     if mc_err:
         return jsonify({"ok": False, "message": mc_err, "state": bot.snapshot()}), 400
     ok, msg = bot.start(
@@ -460,7 +460,7 @@ def api_sim_start():
         return jsonify({"ok": False, "message": busy, "state": sim_bot.snapshot()}), 400
     data = request.get_json(silent=True) or {}
     params = StrategyParams.from_dict(data)
-    mc_err = params.high_mc_exit_error()
+    mc_err = params.high_mc_exit_error() or params.stoploss_ratio_error()
     if mc_err:
         return jsonify({"ok": False, "message": mc_err, "state": sim_bot.snapshot()}), 400
     ok, msg = sim_bot.start(params)
@@ -514,7 +514,7 @@ def api_trade_start():
         return jsonify({"ok": False, "message": busy, "state": trade_bot.snapshot()}), 400
     data = request.get_json(silent=True) or {}
     params = StrategyParams.from_dict(data)
-    mc_err = params.high_mc_exit_error()
+    mc_err = params.high_mc_exit_error() or params.stoploss_ratio_error()
     if mc_err:
         return jsonify({"ok": False, "message": mc_err, "state": trade_bot.snapshot()}), 400
     session_user = _session_user()

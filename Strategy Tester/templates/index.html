@@ -2862,6 +2862,35 @@
       });
     }
 
+    const STOPLOSS_RATIO_FIELDS = [
+      { toggle: "use_stoploss_entry", input: "stoploss_entry_ratio", label: "Stoploss vs entry" },
+      { toggle: "use_stoploss_ath_low", input: "stoploss_ath_low", label: "Stoploss vs ATH" },
+      { toggle: "use_stoploss_ath_high", input: "stoploss_ath_high", label: "Stoploss vs ATH (high MC)" },
+    ];
+
+    function invalidStoplossRatio() {
+      for (const f of STOPLOSS_RATIO_FIELDS) {
+        if (!form.elements.namedItem(f.toggle)?.checked) continue;
+        const raw = form.elements.namedItem(f.input)?.value;
+        const ratio = Number(raw);
+        if (raw === "" || !Number.isFinite(ratio) || ratio >= 1) return { ...f, raw };
+      }
+      return null;
+    }
+
+    function showStoplossRatioAlert(bad) {
+      showAlert(
+        "Invalid stoploss ratio",
+        `${bad.label} ratio must be less than 1.00 (got ${bad.raw === "" ? "empty" : bad.raw}).\n\n` +
+          "The ratio is multiplied by the reference price, so a value of 1.00 or higher " +
+          "would sell immediately at or above the reference."
+      );
+      form.querySelector(`.param[data-enable="${bad.toggle}"]`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+
     function showAlert(title, body) {
       document.getElementById("infoTitle").textContent = title;
       document.getElementById("infoBody").textContent = body;
@@ -3646,6 +3675,11 @@
       clearStartError();
       if (highMcExitConfigInvalid()) {
         showHighMcExitAlert();
+        return;
+      }
+      const badStoploss = invalidStoplossRatio();
+      if (badStoploss) {
+        showStoplossRatioAlert(badStoploss);
         return;
       }
       const body = formParams();
