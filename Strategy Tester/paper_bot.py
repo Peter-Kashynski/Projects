@@ -1364,13 +1364,14 @@ def check_top_ten(top_ten_holders, mint, params: StrategyParams | None = None):
     if len(lst) == 10:
         percents = [round((amount / 1_000_000_000) * 100, 4) for wallet, amount in lst]
         top3 = percents[0] + percents[1] + percents[2]
-        if percents[0] > p.top_holder_max_pct:
+        # Only the ticked Max/Min boxes count. An unticked bound is ignored, not logged.
+        if p.enforce_top_holder_max and percents[0] > p.top_holder_max_pct:
             return "Top Holder owns too much", percents
-        if percents[0] < p.top_holder_min_pct:
+        if p.enforce_top_holder_min and percents[0] < p.top_holder_min_pct:
             return "Top Holder owns too little", percents
-        if top3 > p.top3_max_pct:
+        if p.enforce_top3_max and top3 > p.top3_max_pct:
             return "Top 3 holders own too much", percents
-        if top3 < p.top3_min_pct:
+        if p.enforce_top3_min and top3 < p.top3_min_pct:
             return "Top 3 holders own too little", percents
         return "Concentration good", percents
     return "Unexpected holder count", lst
