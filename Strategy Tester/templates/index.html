@@ -95,7 +95,7 @@
                   <dt>Session PnL</dt>
                   <dd class="wallet-session-pnl-dd">
                     <span id="walletDetailSession">—</span>
-                    <button type="button" class="wallet-session-pnl-toggle" id="sessionPnlUnitToggle" hidden>Show USD</button>
+                    <button type="button" class="wallet-session-pnl-toggle" id="sessionPnlUnitToggle" data-usd-toggle="text" hidden>Show USD</button>
                   </dd>
                 </div>
               </dl>
@@ -612,6 +612,9 @@
         <div class="settings-block">
           <button type="button" class="section-toggle open" id="toggleExitSection" aria-expanded="true" aria-controls="exitSectionBody">Exit</button>
           <div class="settings-block-body" id="exitSectionBody">
+        <div class="exit-subsection">
+        <h4 class="subsection-title">Stoploss</h4>
+        <p class="subsection-note">At least one stoploss must be on.</p>
         <div class="fields">
           <div class="param" data-enable="use_stoploss_entry">
             <div class="param-head">
@@ -638,7 +641,31 @@
               <label>Sell below ATH × <input name="stoploss_ath_low" type="number" step="0.01" value="{{ defaults.stoploss_ath_low }}" /></label>
             </div>
           </div>
+        </div>
+        </div>
 
+        <div class="exit-subsection">
+        <h4 class="subsection-title">Take profit</h4>
+        <div class="fields">
+          <div class="param" data-enable="use_take_profit" id="takeProfitParam">
+            <div class="param-head">
+              <label class="check">
+                <input name="use_take_profit" type="checkbox" {% if defaults.use_take_profit %}checked{% endif %} />
+                Take profit levels
+              </label>
+              <button type="button" class="info-btn" data-info="use_take_profit">i</button>
+            </div>
+            <div class="param-inputs single tp-inputs">
+              <div class="tp-rows" id="takeProfitRows"></div>
+              <button type="button" class="tp-btn tp-add" id="takeProfitAdd">+ Add level</button>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="exit-subsection">
+        <h4 class="subsection-title">Other stops</h4>
+        <div class="fields">
           <div class="param" data-enable="use_stagnation">
             <div class="param-head">
               <label class="check">
@@ -664,7 +691,12 @@
               <label>Seconds <input name="ath_stagnation_sec" type="number" step="0.1" value="{{ defaults.ath_stagnation_sec }}" /></label>
             </div>
           </div>
+        </div>
+        </div>
 
+        <div class="exit-subsection">
+        <h4 class="subsection-title">High MC threshold</h4>
+        <div class="fields">
           <div class="param" data-enable="use_high_mc_threshold">
             <div class="param-head">
               <label class="check">
@@ -674,7 +706,7 @@
               <button type="button" class="info-btn" data-info="use_high_mc_threshold">i</button>
             </div>
             <div class="param-inputs single">
-              <label>USD MC <input name="high_mc_threshold" type="number" value="{{ defaults.high_mc_threshold }}" /></label>
+              <label>Entry MC × <input name="high_mc_multiplier" type="number" step="0.01" value="{{ defaults.high_mc_multiplier }}" /></label>
             </div>
           </div>
 
@@ -704,6 +736,7 @@
             </div>
           </div>
         </div>
+        </div>
           </div>
         </div>
         </div>
@@ -718,7 +751,10 @@
     <main>
       <div class="stats">
         <div class="stat">
-          <div class="label" id="balanceLabel">Balance</div>
+          <div class="stat-label-row">
+            <div class="label" id="balanceLabel">Balance</div>
+            <button type="button" class="usd-toggle" id="statUsdToggle" data-usd-toggle="compact" title="Switch between SOL and USD" hidden>⇄ USD</button>
+          </div>
           <div class="value" id="balance">{{ defaults.starting_balance }}</div>
         </div>
         <div class="stat">
@@ -771,7 +807,6 @@
           <div class="log-filters" id="logFilters" role="group" aria-label="Event log filters">
             <label class="log-filter"><input type="checkbox" data-kind="buy" checked /> Buy</label>
             <label class="log-filter"><input type="checkbox" data-kind="sell" checked /> Sell</label>
-            <label class="log-filter" id="logFilterTx" hidden><input type="checkbox" data-kind="tx" checked /> Solscan</label>
             <label class="log-filter"><input type="checkbox" data-kind="skip" checked /> Skip</label>
             <label class="log-filter"><input type="checkbox" data-kind="sub" /> Sub/Unsub</label>
             <label class="log-filter"><input type="checkbox" data-kind="status" checked /> Status</label>
@@ -901,15 +936,19 @@
       },
       use_stoploss_ath_low: {
         title: "Stoploss vs ATH",
-        body: "When High MC threshold is off, or MC is below that threshold, sell if price falls below ATH × ratio.",
+        body: "When High MC threshold is off, or the coin hasn't reached its profit level (entry MC × multiplier), sell if price falls below ATH × ratio.",
       },
       use_stoploss_ath_high: {
         title: "Stoploss vs ATH (high MC)",
-        body: "Only when High MC threshold is on and MC is at/above it: sell if price falls below ATH × ratio.",
+        body: "Only when High MC threshold is on and the coin has reached its profit level (entry MC × multiplier): sell if price falls below ATH × ratio.",
+      },
+      use_take_profit: {
+        title: "Take profit",
+        body: "Sell part of a coin as it rises, at multiples of its entry market cap. Each level sells a % of the original position, in order.\n\nExample: 50% at 1.5x, 25% at 2x, 25% at 3x\n• 1.5x: sell 50% of the original\n• 2x: sell another 25%\n• 3x: sell the last 25%\n\nSizes can't add up to more than 100%. After the last level fires, the rest of the coin defaults to your stoploss and other sell measures. Multipliers must be above 1.00 and increase down the list.",
       },
       use_high_mc_threshold: {
         title: "High MC threshold",
-        body: "Optional cutoff (USD MC) that enables high-MC exit rules: high ATH stoploss and high-MC ATH stagnation. When off, only the base ATH stoploss / ATH stagnation rules apply.",
+        body: "Optional, different exit rules for profitable coins. Each coin gets its own profit level: its entry market cap × this multiplier (for example 1.5 = once the coin is up 50% from entry). Once a coin is at or above that level, the high-MC rules replace the regular ones for that coin: Stoploss vs ATH (high MC) and ATH stagnation (high MC). The multiplier must be greater than 1.00. When off, only the regular ATH stoploss / ATH stagnation rules apply to every coin.",
       },
       use_stagnation: {
         title: "Trade stagnation",
@@ -918,13 +957,13 @@
       },
       use_ath_stagnation: {
         title: "ATH stagnation",
-        body: "If a new ATH hasn’t printed for this many seconds while below the high-MC threshold (or whenever high-MC mode is off), paper-sell.",
-        bodyLive: "If a new ATH hasn’t printed for this many seconds while below the high-MC threshold (or whenever high-MC mode is off), sell.",
+        body: "If a new ATH hasn’t printed for this many seconds while the coin is below its profit level (entry MC × multiplier), or whenever high-MC mode is off, paper-sell.",
+        bodyLive: "If a new ATH hasn’t printed for this many seconds while the coin is below its profit level (entry MC × multiplier), or whenever high-MC mode is off, sell.",
       },
       use_ath_stagnation_high: {
         title: "ATH stagnation (high MC)",
-        body: "When High MC threshold is on and MC is above it: if no new ATH for this many seconds, paper-sell. Independent of the base ATH stagnation toggle.",
-        bodyLive: "When High MC threshold is on and MC is above it: if no new ATH for this many seconds, sell. Independent of the base ATH stagnation toggle.",
+        body: "When High MC threshold is on and the coin is above its profit level (entry MC × multiplier): if no new ATH for this many seconds, paper-sell. Independent of the base ATH stagnation toggle.",
+        bodyLive: "When High MC threshold is on and the coin is above its profit level (entry MC × multiplier): if no new ATH for this many seconds, sell. Independent of the base ATH stagnation toggle.",
       },
     };
 
@@ -1701,6 +1740,7 @@
         remaskAccountSecrets();
         setHeaderWalletMenuOpen(false);
         paintTransferBalance();
+        ensureSolUsdPrice();
         pollHeaderWallet();
       } else {
         resetTransferConfirm();
@@ -1716,7 +1756,7 @@
       const bal = document.getElementById("xferBalance");
       if (!bal) return;
       if (headerWalletSol != null && Number.isFinite(headerWalletSol)) {
-        bal.textContent = `${headerWalletSol.toFixed(4)} SOL`;
+        bal.textContent = `${headerWalletSol.toFixed(4)} SOL${usdApprox(headerWalletSol)}`;
       } else {
         bal.textContent = "—";
       }
@@ -2195,6 +2235,108 @@
       });
     }
 
+    // ---- Take profit levels (dynamic rows; inputs have no `name`, read via readTakeProfitLevels) ----
+    const TP_MAX_LEVELS = 6;
+    const TP_DEFAULT_LEVELS = {{ defaults.take_profit_levels|tojson }};
+    const tpRowsEl = () => document.getElementById("takeProfitRows");
+
+    function tpCell(value) {
+      return value === null || value === undefined || value === "" ? "" : String(value);
+    }
+
+    function buildTakeProfitRow(level) {
+      const row = document.createElement("div");
+      row.className = "tp-row";
+      row.innerHTML =
+        `<label>Sell % of original <input class="tp-pct" type="number" step="1" min="1" max="100" value="${tpCell(level?.orig_pct)}" /></label>` +
+        `<label>At entry MC × <input class="tp-mult" type="number" step="0.05" min="1" value="${tpCell(level?.mult)}" /></label>` +
+        `<button type="button" class="tp-btn tp-remove" title="Remove level" aria-label="Remove level">×</button>`;
+      return row;
+    }
+
+    function readTakeProfitLevels() {
+      const host = tpRowsEl();
+      if (!host) return [];
+      return [...host.querySelectorAll(".tp-row")].map((row) => {
+        const num = (sel) => {
+          const v = row.querySelector(sel).value;
+          return v === "" ? null : Number(v);
+        };
+        return { mult: num(".tp-mult"), orig_pct: num(".tp-pct") };
+      });
+    }
+
+    // Older saves stored "% of what is still held" as `pct`; convert them to % of the original
+    function normalizeTakeProfitLevels(list) {
+      if (!Array.isArray(list)) return [];
+      let left = 100;
+      return list.map((lvl) => {
+        let orig = null;
+        if (lvl && lvl.orig_pct !== undefined) {
+          orig = lvl.orig_pct === null || lvl.orig_pct === "" ? null : Number(lvl.orig_pct);
+        } else if (lvl && lvl.pct !== undefined && lvl.pct !== null && lvl.pct !== "") {
+          orig = +((left * Number(lvl.pct)) / 100).toFixed(4);
+        }
+        if (orig !== null && Number.isFinite(orig)) left = Math.max(0, left - orig);
+        return { mult: lvl ? lvl.mult : null, orig_pct: orig };
+      });
+    }
+
+    function updateTakeProfitUi() {
+      const host = tpRowsEl();
+      if (!host) return;
+      const rows = host.querySelectorAll(".tp-row");
+      host.querySelectorAll(".tp-remove").forEach((btn) => {
+        btn.disabled = botRunning || rows.length <= 1;
+      });
+      const addBtn = document.getElementById("takeProfitAdd");
+      if (addBtn) addBtn.disabled = botRunning || rows.length >= TP_MAX_LEVELS;
+    }
+
+    function renderTakeProfitRows(levels) {
+      const host = tpRowsEl();
+      if (!host) return;
+      const normalized = normalizeTakeProfitLevels(levels);
+      const list = normalized.length ? normalized : normalizeTakeProfitLevels(TP_DEFAULT_LEVELS);
+      host.innerHTML = "";
+      list.slice(0, TP_MAX_LEVELS).forEach((lvl) => host.appendChild(buildTakeProfitRow(lvl)));
+      enhanceNumberInputs();
+      if (typeof syncParamEnabled === "function") syncParamEnabled();
+      updateTakeProfitUi();
+    }
+
+    function takeProfitProblem() {
+      if (!form.elements.namedItem("use_take_profit")?.checked) return null;
+      const levels = readTakeProfitLevels();
+      if (!levels.length) return "Add at least one level, or turn Take profit off.";
+      let prev = null;
+      let total = 0;
+      for (let i = 0; i < levels.length; i++) {
+        const { mult, orig_pct: pct } = levels[i];
+        const n = i + 1;
+        if (mult === null || !Number.isFinite(mult) || mult <= 1) {
+          return `Level ${n}: the multiplier must be greater than 1.00 (got ${mult === null ? "empty" : mult}). It is a multiple of the entry market cap.`;
+        }
+        if (pct === null || !Number.isFinite(pct) || pct < 1 || pct > 100) {
+          return `Level ${n}: sell % must be between 1 and 100 (got ${pct === null ? "empty" : pct}). It is a percentage of the original position.`;
+        }
+        if (prev !== null && mult <= prev) {
+          return `Level ${n}: multiplier ${mult}x must be higher than level ${n - 1} (${prev}x). Levels fire in order.`;
+        }
+        prev = mult;
+        total += pct;
+      }
+      if (total > 100.0001) {
+        return `Sell sizes add up to ${+total.toFixed(2)}% of the original position. They can't add up to more than 100%.`;
+      }
+      return null;
+    }
+
+    function showTakeProfitAlert(message) {
+      showAlert("Invalid take profit", message);
+      document.getElementById("takeProfitParam")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
     function formParams() {
       // Read inputs directly (FormData omits disabled fields → server defaults sneak in)
       const out = {};
@@ -2205,6 +2347,7 @@
           out[el.name] = Number(el.value);
         }
       });
+      out.take_profit_levels = readTakeProfitLevels();
       return out;
     }
 
@@ -2442,6 +2585,7 @@
           }
         }
       });
+      if (Array.isArray(saved.take_profit_levels)) renderTakeProfitRows(saved.take_profit_levels);
       syncParamEnabled();
       syncWalletStopLabels();
     }
@@ -2759,6 +2903,7 @@
       [...form.querySelectorAll("input")].forEach((el) => { el.disabled = running; });
       if (!running) syncParamEnabled();
       else syncStepperDisabled();
+      updateTakeProfitUi();
       renderPresetsBar();
     }
 
@@ -2840,9 +2985,9 @@
       title: "High MC needs an exit rule",
       body:
         "High MC threshold is on, but neither high-MC exit rule is enabled.\n\n" +
-        "That cutoff only switches which ATH rules apply — it does not sell by itself. " +
-        "While market cap is at or above your USD MC threshold, the regular Stoploss vs ATH " +
-        "and ATH stagnation rules are turned off.\n\n" +
+        "That setting only switches which ATH rules apply — it does not sell by itself. " +
+        "Once a coin reaches its profit level (entry market cap × your multiplier), the regular " +
+        "Stoploss vs ATH and ATH stagnation rules are turned off for that coin.\n\n" +
         "Enable Stoploss vs ATH (high MC) and/or ATH stagnation (high MC), " +
         "or turn off High MC threshold to use the regular rules everywhere.",
     };
@@ -2865,17 +3010,63 @@
     const STOPLOSS_RATIO_FIELDS = [
       { toggle: "use_stoploss_entry", input: "stoploss_entry_ratio", label: "Stoploss vs entry" },
       { toggle: "use_stoploss_ath_low", input: "stoploss_ath_low", label: "Stoploss vs ATH" },
-      { toggle: "use_stoploss_ath_high", input: "stoploss_ath_high", label: "Stoploss vs ATH (high MC)" },
+      {
+        toggle: "use_stoploss_ath_high",
+        parent: "use_high_mc_threshold",
+        input: "stoploss_ath_high",
+        label: "Stoploss vs ATH (high MC)",
+      },
     ];
+
+    function noStoplossSelected() {
+      const on = (name) => !!form.elements.namedItem(name)?.checked;
+      return !on("use_stoploss_entry") && !on("use_stoploss_ath_low");
+    }
+
+    function showNoStoplossAlert() {
+      showAlert(
+        "Stoploss required",
+        "Turn on at least one stoploss: Stoploss vs entry or Stoploss vs ATH.\n\n" +
+          "Without one, a losing coin is never stopped out. Stoploss vs ATH (high MC) doesn't " +
+          "count on its own because it only applies once a coin reaches its profit level."
+      );
+      form.querySelector('.param[data-enable="use_stoploss_entry"]')?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
 
     function invalidStoplossRatio() {
       for (const f of STOPLOSS_RATIO_FIELDS) {
+        // A child rule is ignored while its parent toggle is off
+        if (f.parent && !form.elements.namedItem(f.parent)?.checked) continue;
         if (!form.elements.namedItem(f.toggle)?.checked) continue;
         const raw = form.elements.namedItem(f.input)?.value;
         const ratio = Number(raw);
         if (raw === "" || !Number.isFinite(ratio) || ratio >= 1) return { ...f, raw };
       }
       return null;
+    }
+
+    function invalidHighMcMultiplier() {
+      if (!form.elements.namedItem("use_high_mc_threshold")?.checked) return null;
+      const raw = form.elements.namedItem("high_mc_multiplier")?.value;
+      const mult = Number(raw);
+      if (raw === "" || !Number.isFinite(mult) || mult <= 1) return { raw };
+      return null;
+    }
+
+    function showHighMcMultiplierAlert(bad) {
+      showAlert(
+        "Invalid High MC threshold",
+        `The multiplier must be greater than 1.00 (got ${bad.raw === "" ? "empty" : bad.raw}).\n\n` +
+          "It is a multiple of each coin's entry market cap, so the profit rules only start " +
+          "once a coin is above its entry."
+      );
+      form.querySelector('.param[data-enable="use_high_mc_threshold"]')?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }
 
     function showStoplossRatioAlert(bad) {
@@ -3190,6 +3381,7 @@
 
     let headerWalletSol = null;
     let lastRenderState = null;
+    let lastTradeSig = null;
     let headerWalletDetails = {
       sol: null,
       lamports: null,
@@ -3253,11 +3445,11 @@
     }
 
     const SESSION_PNL_USD_KEY = "stonkbot_session_pnl_usd_v1";
-    let sessionPnlShowUsd = false;
+    let showUsd = false;
     let cachedSolUsd = null;
 
     try {
-      sessionPnlShowUsd = localStorage.getItem(SESSION_PNL_USD_KEY) === "1";
+      showUsd = localStorage.getItem(SESSION_PNL_USD_KEY) === "1";
     } catch (_) {}
 
     function sessionPnlTotalFromState(state) {
@@ -3268,7 +3460,7 @@
     }
 
     function formatSessionPnlDisplay(totalSol) {
-      if (!sessionPnlShowUsd) {
+      if (!showUsd) {
         const sign = totalSol > 0 ? "+" : "";
         return `${sign}${totalSol.toFixed(4)} SOL`;
       }
@@ -3287,15 +3479,69 @@
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.ok && Number.isFinite(Number(data.usd))) {
           cachedSolUsd = Number(data.usd);
+          solUsdFetchedAt = Date.now();
           return cachedSolUsd;
         }
       } catch (_) {}
       return null;
     }
 
-    function updateSessionPnlToggleLabel() {
-      const btn = document.getElementById("sessionPnlUnitToggle");
-      if (btn) btn.textContent = sessionPnlShowUsd ? "Show SOL" : "Show USD";
+    function formatUsdAmount(usd) {
+      return `$${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    // " · ≈ $12.34" for a SOL amount, or "" while the price isn't known yet
+    function usdApprox(sol) {
+      if (!Number.isFinite(sol) || !Number.isFinite(cachedSolUsd)) return "";
+      return ` · ≈ ${formatUsdAmount(sol * cachedSolUsd)}`;
+    }
+
+    function updateUsdToggleLabels() {
+      document.querySelectorAll("[data-usd-toggle]").forEach((btn) => {
+        const compact = btn.dataset.usdToggle === "compact";
+        btn.textContent = compact ? `⇄ ${showUsd ? "SOL" : "USD"}` : showUsd ? "Show SOL" : "Show USD";
+        btn.title = showUsd ? "Showing USD — click for SOL" : "Showing SOL — click for USD";
+      });
+    }
+
+    // Session PnL card (Trade tab only): follows the SOL / USD preference
+    function paintSessionPnlStat(state) {
+      const balEl = document.getElementById("balance");
+      if (!balEl) return;
+      const total = sessionPnlTotalFromState(state);
+      const realized = Number(state?.pnl_sol);
+      const unreal = Number(state?.unrealized_pnl_sol) || 0;
+      const r = Number.isFinite(realized) ? realized : 0;
+      balEl.textContent = formatSessionPnlDisplay(total);
+      balEl.title = `Realized ${r >= 0 ? "+" : ""}${r.toFixed(6)} SOL (wallet tx deltas) · Unrealized ${unreal >= 0 ? "+" : ""}${unreal.toFixed(6)} SOL (actual spend × MC %)`;
+      balEl.classList.toggle("pnl-up", total > 0);
+      balEl.classList.toggle("pnl-down", total < 0);
+    }
+
+    // Repaint everything that can show SOL or USD
+    function repaintUsdViews() {
+      updateUsdToggleLabels();
+      syncHeaderAccountBalance(lastRenderState || {}); // also repaints the wallet dropdown
+      if (lastRenderState?.mode === "trade") paintSessionPnlStat(lastRenderState);
+    }
+
+    // Fetch the SOL price if we have none or it's stale (throttled so a failing price source
+    // isn't hammered). Needed when the USD Session PnL is on, or the wallet dropdown /
+    // Account panel is open, since both show a USD value.
+    let lastSolUsdAttempt = 0;
+    let solUsdFetchedAt = 0;
+    function ensureSolUsdPrice(maxAgeMs = 60000) {
+      const now = Date.now();
+      if (Number.isFinite(cachedSolUsd) && now - solUsdFetchedAt < maxAgeMs) return;
+      if (now - lastSolUsdAttempt < 15000) return;
+      lastSolUsdAttempt = now;
+      refreshSolUsdPrice().then(() => repaintUsdViews());
+    }
+
+    function usdViewsOpen() {
+      const menu = document.getElementById("headerWalletMenu");
+      const panel = document.getElementById("accountPanel");
+      return !!((menu && !menu.hidden) || (panel && !panel.hidden));
     }
 
     function paintWalletMenuDetails(state) {
@@ -3315,7 +3561,11 @@
       const lamports = headerWalletDetails.lamports;
       const ppMin = headerWalletDetails.ppMinSol;
 
-      solEl.textContent = sol != null && Number.isFinite(sol) ? `${sol.toFixed(6)} SOL` : "—";
+      if (sol != null && Number.isFinite(sol)) {
+        solEl.textContent = `${sol.toFixed(6)} SOL${usdApprox(sol)}`;
+      } else {
+        solEl.textContent = "—";
+      }
       lamEl.textContent = lamports != null && Number.isFinite(lamports)
         ? lamports.toLocaleString()
         : "—";
@@ -3358,7 +3608,7 @@
           sessionRow.hidden = false;
           if (sessionToggle) {
             sessionToggle.hidden = false;
-            updateSessionPnlToggleLabel();
+            updateUsdToggleLabels();
           }
         } else {
           sessionRow.hidden = true;
@@ -3377,11 +3627,8 @@
       menu.hidden = !open;
       if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
       if (open) {
-        if (sessionPnlShowUsd && cachedSolUsd == null) {
-          refreshSolUsdPrice().then(() => paintWalletMenuDetails(lastRenderState));
-        } else {
-          paintWalletMenuDetails(lastRenderState);
-        }
+        paintWalletMenuDetails(lastRenderState);
+        ensureSolUsdPrice();
         pollHeaderWallet();
       }
     }
@@ -3467,6 +3714,7 @@
 
       const sol = headerWalletSol;
       if (sol != null && Number.isFinite(sol)) {
+        // Header always shows SOL; the USD value is in the dropdown / Account panel
         valueEl.innerHTML =
           `<span class="header-balance-num">${sol.toFixed(4)}</span>` +
           `<span class="header-balance-unit">SOL</span>`;
@@ -3527,17 +3775,20 @@
     document.getElementById("headerWalletRefresh")?.addEventListener("click", () => {
       pollHeaderWallet();
     });
-    document.getElementById("sessionPnlUnitToggle")?.addEventListener("click", async (e) => {
-      e.stopPropagation();
-      sessionPnlShowUsd = !sessionPnlShowUsd;
-      try {
-        localStorage.setItem(SESSION_PNL_USD_KEY, sessionPnlShowUsd ? "1" : "0");
-      } catch (_) {}
-      updateSessionPnlToggleLabel();
-      if (sessionPnlShowUsd && cachedSolUsd == null) {
-        await refreshSolUsdPrice();
-      }
-      paintWalletMenuDetails(lastRenderState);
+    // One SOL / USD preference shared by the header balance, wallet dropdown and Session PnL
+    document.querySelectorAll("[data-usd-toggle]").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        showUsd = !showUsd;
+        try {
+          localStorage.setItem(SESSION_PNL_USD_KEY, showUsd ? "1" : "0");
+        } catch (_) {}
+        if (showUsd && !Number.isFinite(cachedSolUsd)) {
+          lastSolUsdAttempt = Date.now();
+          await refreshSolUsdPrice();
+        }
+        repaintUsdViews();
+      });
     });
     document.getElementById("headerWalletMenu")?.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -3547,21 +3798,41 @@
       if (menu && !menu.hidden) setHeaderWalletMenuOpen(false);
     });
 
+    // Header balance refresh: event-driven (trade fills, start/stop, transfers,
+    // tab focus, manual refresh) plus a slow background poll for outside changes.
+    const WALLET_POLL_MS = 30000;
+
+    function maybeRefreshWalletOnTrade(state) {
+      if (!state || state.mode !== "trade") {
+        lastTradeSig = null;
+        return;
+      }
+      const sig = `${Number(state.buy_count) || 0}:${Number(state.coins_sold) || 0}`;
+      const changed = lastTradeSig !== null && sig !== lastTradeSig;
+      lastTradeSig = sig;
+      // A buy or sell just landed: re-check until the balance actually moves
+      if (changed) watchWalletBalance(20000);
+    }
+
+    function pollHeaderWalletBackground() {
+      if (document.visibilityState !== "visible") return;
+      // While the trade bot runs, it already refreshes and streams wallet_sol
+      const s = lastRenderState;
+      if (s && s.mode === "trade" && s.running && walletSolFromState(s) != null) return;
+      pollHeaderWallet();
+    }
+
     function render(state) {
       lastRenderState = state;
+      maybeRefreshWalletOnTrade(state);
       const balLabel = document.getElementById("balanceLabel");
       const balEl = document.getElementById("balance");
+      const statUsdToggle = document.getElementById("statUsdToggle");
+      if (statUsdToggle) statUsdToggle.hidden = state.mode !== "trade";
       if (state.mode === "trade") {
         balLabel.textContent = "Session PnL";
-        const realized = Number(state.pnl_sol);
-        const unreal = Number(state.unrealized_pnl_sol) || 0;
-        const r = Number.isFinite(realized) ? realized : 0;
-        const total = r + unreal;
-        const sign = total > 0 ? "+" : "";
-        balEl.textContent = `${sign}${total.toFixed(4)} SOL`;
-        balEl.title = `Realized ${r >= 0 ? "+" : ""}${r.toFixed(6)} (wallet tx deltas) · Unrealized ${unreal >= 0 ? "+" : ""}${unreal.toFixed(6)} (actual spend × MC %)`;
-        balEl.classList.toggle("pnl-up", total > 0);
-        balEl.classList.toggle("pnl-down", total < 0);
+        paintSessionPnlStat(state);
+        if (showUsd) ensureSolUsdPrice();
       } else {
         balLabel.textContent = "Balance";
         balEl.textContent = state.balance;
@@ -3677,9 +3948,23 @@
         showHighMcExitAlert();
         return;
       }
+      const badHighMult = invalidHighMcMultiplier();
+      if (badHighMult) {
+        showHighMcMultiplierAlert(badHighMult);
+        return;
+      }
+      if (noStoplossSelected()) {
+        showNoStoplossAlert();
+        return;
+      }
       const badStoploss = invalidStoplossRatio();
       if (badStoploss) {
         showStoplossRatioAlert(badStoploss);
+        return;
+      }
+      const tpProblem = takeProfitProblem();
+      if (tpProblem) {
+        showTakeProfitAlert(tpProblem);
         return;
       }
       const body = formParams();
@@ -3766,6 +4051,35 @@
       }
     });
 
+    renderTakeProfitRows(TP_DEFAULT_LEVELS);
+    document.getElementById("takeProfitAdd")?.addEventListener("click", () => {
+      const host = tpRowsEl();
+      if (!host || botRunning || host.querySelectorAll(".tp-row").length >= TP_MAX_LEVELS) return;
+      const levels = readTakeProfitLevels();
+      const lastMult = levels.length ? Number(levels[levels.length - 1].mult) : NaN;
+      const nextMult = Number.isFinite(lastMult) && lastMult > 1 ? +(lastMult + 0.5).toFixed(2) : 2;
+      // Default the new level to whatever share of the position isn't allocated yet
+      const allocated = levels.reduce((sum, l) => sum + (Number.isFinite(l.orig_pct) ? l.orig_pct : 0), 0);
+      const unallocated = +(100 - allocated).toFixed(2);
+      host.appendChild(
+        buildTakeProfitRow({ mult: nextMult, orig_pct: unallocated >= 1 ? unallocated : 10 })
+      );
+      enhanceNumberInputs();
+      syncParamEnabled();
+      updateTakeProfitUi();
+      saveParams();
+    });
+    tpRowsEl()?.addEventListener("click", (e) => {
+      const btn = e.target.closest(".tp-remove");
+      if (!btn || btn.disabled || botRunning) return;
+      const host = tpRowsEl();
+      if (host.querySelectorAll(".tp-row").length <= 1) return;
+      btn.closest(".tp-row")?.remove();
+      updateTakeProfitUi();
+      saveParams();
+    });
+    tpRowsEl()?.addEventListener("input", updateTakeProfitUi);
+
     enhanceNumberInputs();
     migrateLegacyParams();
     wirePresetsBar();
@@ -3831,7 +4145,7 @@
     }
 
     connectStream();
-    setInterval(pollHeaderWallet, 4000);
+    setInterval(pollHeaderWalletBackground, WALLET_POLL_MS);
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") pollHeaderWallet();
     });
@@ -3840,10 +4154,15 @@
       tradePubkeyInput.addEventListener("change", pollHeaderWallet);
       tradePubkeyInput.addEventListener("blur", pollHeaderWallet);
     }
-    updateSessionPnlToggleLabel();
-    if (sessionPnlShowUsd) {
-      refreshSolUsdPrice().then(() => paintWalletMenuDetails(lastRenderState));
-    }
+    updateUsdToggleLabels();
+    if (showUsd) ensureSolUsdPrice();
+    // Keep the USD price fresh while something is showing it
+    setInterval(() => {
+      if (!(showUsd || usdViewsOpen()) || document.visibilityState !== "visible") return;
+      refreshSolUsdPrice().then((price) => {
+        if (price != null) repaintUsdViews();
+      });
+    }, 60000);
     syncHeaderAccountBalance({});
     pollHeaderWallet();
     pollAllModeStatus();

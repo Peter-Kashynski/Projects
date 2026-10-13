@@ -11,9 +11,11 @@ from dataclasses import asdict
 from typing import Any
 
 from paper_bot import (
+    TAKE_PROFIT_RETRY_SEC,
     StrategyParams,
     TradeRecord,
     check_top_ten,
+    take_profit_due,
     top_holder_max_skip_message,
     get_volume,
     holder_top_pct,
@@ -483,7 +485,7 @@ class SimBot:
                 elapsed = now - pos["ath_timer"]
                 in_high = (
                     params.use_high_mc_threshold
-                    and current > params.high_mc_threshold
+                    and current > params.high_mc_level(pos["entry_mc"])
                 )
                 if in_high:
                     if (
@@ -513,7 +515,7 @@ class SimBot:
                 pos["ath_timer"] = time.time()
             entry = pos["entry_mc"]
             ath = pos["ath"]
-            high = params.high_mc_threshold
+            high = params.high_mc_level(entry)
             use_high = params.use_high_mc_threshold
 
         if usd_mc > 1_000:
@@ -535,6 +537,24 @@ class SimBot:
             if ath_high_hit:
                 self._close_position(mint, usd_mc, "Stoploss (high MC)")
                 return
+
+        if params.use_take_profit:
+            with self._lock:
+                live_pos = self.open_positions.get(mint)
+                due = take_profit_due(params, live_pos, usd_mc) if live_pos else None
+                if due:
+                    live_pos["tp_idx"] = due[0] + 1
+            if due:
+                idx, mult, pct, orig_pct = due
+                ok, _msg = self._sell_fraction(
+                    mint, usd_mc, pct / 100.0, f"Take profit {mult:g}x ({orig_pct:g}% of original)"
+                )
+                if not ok:
+                    with self._lock:
+                        live_pos = self.open_positions.get(mint)
+                        if live_pos is not None:
+                            live_pos["tp_idx"] = idx
+                            live_pos["tp_retry_at"] = time.time() + TAKE_PROFIT_RETRY_SEC
 
     def manual_sell(self, mint: str, pct: float) -> tuple[bool, str]:
         if pct not in (25, 50, 75, 100):

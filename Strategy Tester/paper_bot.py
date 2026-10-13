@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 import ssl
 import threading
 import time
 from collections import deque
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
 import websockets
@@ -27,8 +28,53 @@ PP_API_KEY_MIN_LEN = 32
 # Probe mint to confirm subscribeTokenTrade accepts this API key
 PP_API_KEY_PROBE_MINT = "So11111111111111111111111111111111111111112"
 
+# Take profit: max tiers, and how long to wait before retrying a failed tier sell
+MAX_TAKE_PROFIT_LEVELS = 6
+TAKE_PROFIT_RETRY_SEC = 5.0
+
+
+def _default_take_profit_levels() -> list[dict[str, float | None]]:
+    # Each level sells `orig_pct` % of the ORIGINAL position when MC reaches entry MC × `mult`
+    return [
+        {"mult": 1.5, "orig_pct": 50.0},
+        {"mult": 2.0, "orig_pct": 25.0},
+        {"mult": 3.0, "orig_pct": 25.0},
+    ]
+
+
+def _to_float_or_none(value: Any) -> float | None:
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        return None
+    return out if math.isfinite(out) else None
+
+
+def _clean_take_profit_levels(raw: Any) -> list[dict[str, float | None]] | None:
+    """Normalize client input; blank / non-numeric cells become None so validation can flag them."""
+    if not isinstance(raw, list):
+        return None
+    out: list[dict[str, float | None]] = []
+    left = 100.0  # % of the original position still unallocated (for converting old saves)
+    for item in raw[: MAX_TAKE_PROFIT_LEVELS + 1]:
+        if not isinstance(item, dict):
+            continue
+        if "orig_pct" in item:
+            pct = _to_float_or_none(item.get("orig_pct"))
+        elif "pct" in item:
+            # Older saves stored "% of what is still held"; convert to % of the original
+            rem = _to_float_or_none(item.get("pct"))
+            pct = None if rem is None else round(left * rem / 100.0, 4)
+        else:
+            pct = None
+        if pct is not None:
+            left = max(0.0, left - pct)
+        out.append({"mult": _to_float_or_none(item.get("mult")), "orig_pct": pct})
+    return out
+
 
 BOOL_PARAMS = {
+    "use_take_profit",
     "use_mc_range",
     "use_min_age",
     "use_min_buy_volume",
@@ -73,7 +119,8 @@ class StrategyParams:
     stoploss_entry_ratio: float = 0.95
     stoploss_ath_low: float = 0.90
     stoploss_ath_high: float = 0.85
-    high_mc_threshold: float = 20_000
+    # High-MC ("profit") rules kick in once a coin's MC reaches entry MC × this multiplier
+    high_mc_multiplier: float = 1.5
     stagnation_sec: float = 5
     ath_stagnation_sec: float = 7
     ath_stagnation_high_sec: float = 10
@@ -108,6 +155,10 @@ class StrategyParams:
     use_wallet_stop: bool = False
     wallet_stop_is_pct: bool = True
     wallet_stop_value: float = 10
+    # Take profit: each tier sells `orig_pct` % of the original position once MC reaches
+    # entry MC × `mult`. Tiers fire in order; sizes add up to at most 100%.
+    use_take_profit: bool = True
+    take_profit_levels: list = field(default_factory=_default_take_profit_levels)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "StrategyParams":
@@ -115,6 +166,11 @@ class StrategyParams:
         cleaned: dict[str, Any] = {}
         for k, v in data.items():
             if k not in known:
+                continue
+            if k == "take_profit_levels":
+                levels = _clean_take_profit_levels(v)
+                if levels is not None:
+                    cleaned[k] = levels
                 continue
             if k in BOOL_PARAMS:
                 if isinstance(v, bool):
@@ -141,16 +197,130 @@ class StrategyParams:
             )
         return None
 
+    def high_mc_level(self, entry_mc: float) -> float:
+        """MC at which a position switches to the high-MC (profit) rules."""
+        return float(entry_mc) * float(self.high_mc_multiplier)
+
+    def high_mc_multiplier_error(self) -> str | None:
+        if self.use_high_mc_threshold and not self.high_mc_multiplier > 1.0:
+            return (
+                "High MC threshold multiplier must be greater than 1.00 "
+                f"(got {self.high_mc_multiplier:.2f}). It is a multiple of the entry "
+                "market cap, so the profit rules only start once a coin is above entry."
+            )
+        return None
+
+    def stoploss_required_error(self) -> str | None:
+        # Only these two cover a coin at every price. The high-MC ATH stoploss applies once a
+        # coin has reached its profit level, so it can't be the only protection.
+        if not (self.use_stoploss_entry or self.use_stoploss_ath_low):
+            return (
+                "Turn on at least one stoploss: Stoploss vs entry or Stoploss vs ATH. "
+                "Without one, a losing coin is never stopped out."
+            )
+        return None
+
     def stoploss_ratio_error(self) -> str | None:
         checks = (
             (self.use_stoploss_entry, self.stoploss_entry_ratio, "Stoploss vs entry"),
             (self.use_stoploss_ath_low, self.stoploss_ath_low, "Stoploss vs ATH"),
-            (self.use_stoploss_ath_high, self.stoploss_ath_high, "Stoploss vs ATH (high MC)"),
+            # High-MC rule only applies when its parent (High MC threshold) is on
+            (
+                self.use_high_mc_threshold and self.use_stoploss_ath_high,
+                self.stoploss_ath_high,
+                "Stoploss vs ATH (high MC)",
+            ),
         )
         for enabled, ratio, label in checks:
             if enabled and not ratio < 1.0:
                 return f"{label} ratio must be less than 1.00 (got {ratio:.2f})."
         return None
+
+    def take_profit_tier(self, index: int) -> tuple[float, float] | None:
+        """(multiplier, sell % of the original position) for tier `index`, or None."""
+        if not self.use_take_profit:
+            return None
+        levels = self.take_profit_levels
+        if not isinstance(levels, list) or not 0 <= index < len(levels):
+            return None
+        level = levels[index]
+        mult = _to_float_or_none(level.get("mult"))
+        pct = _to_float_or_none(level.get("orig_pct"))
+        if mult is None or pct is None:
+            return None
+        return mult, pct
+
+    def take_profit_error(self) -> str | None:
+        if not self.use_take_profit:
+            return None
+        levels = self.take_profit_levels
+        if not isinstance(levels, list) or not levels:
+            return "Take profit is on but has no levels. Add at least one level or turn it off."
+        if len(levels) > MAX_TAKE_PROFIT_LEVELS:
+            return f"Take profit supports at most {MAX_TAKE_PROFIT_LEVELS} levels."
+        prev_mult: float | None = None
+        total_pct = 0.0
+        for i, level in enumerate(levels, start=1):
+            mult = _to_float_or_none(level.get("mult"))
+            pct = _to_float_or_none(level.get("orig_pct"))
+            if mult is None or not mult > 1.0:
+                got = "empty" if mult is None else f"{mult:g}"
+                return (
+                    f"Take profit level {i}: multiplier must be greater than 1.00 (got {got}). "
+                    "It is a multiple of the entry market cap."
+                )
+            if pct is None or not 1.0 <= pct <= 100.0:
+                got = "empty" if pct is None else f"{pct:g}"
+                return (
+                    f"Take profit level {i}: sell % must be between 1 and 100 (got {got}). "
+                    "It is a percentage of the original position."
+                )
+            if prev_mult is not None and not mult > prev_mult:
+                return (
+                    f"Take profit level {i}: multiplier {mult:g}x must be higher than "
+                    f"level {i - 1} ({prev_mult:g}x). Levels fire in order."
+                )
+            prev_mult = mult
+            total_pct += pct
+        if total_pct > 100.0 + 1e-9:
+            return (
+                f"Take profit sell sizes add up to {total_pct:g}% of the original position. "
+                "They can't add up to more than 100%."
+            )
+        return None
+
+
+def take_profit_due(
+    params: StrategyParams, pos: dict[str, Any], usd_mc: float
+) -> tuple[int, float, float, float] | None:
+    """Next take-profit tier for this position if its MC has reached it.
+
+    Returns (tier index, multiplier, sell % of what is still held, sell % of the original)
+    or None. Levels are set as a % of the original position; the bots sell a fraction of
+    what is left, so the original-% is converted here. Call with the bot lock held.
+    """
+    if not params.use_take_profit:
+        return None
+    if float(pos.get("tp_retry_at") or 0) > time.time():
+        return None
+    idx = int(pos.get("tp_idx") or 0)
+    tier = params.take_profit_tier(idx)
+    if tier is None:
+        return None
+    entry = float(pos.get("entry_mc") or 0)
+    mult, orig_pct = tier
+    if entry <= 0 or usd_mc < entry * mult:
+        return None
+    units = float(pos.get("entry_units") or 0)
+    if units <= 0:
+        return None
+    # "Original" = what was held when take profit first fired (later manual sells just shrink
+    # what is left, so a level never sells more than remains).
+    base = float(pos.setdefault("tp_base_units", units))
+    frac = min(1.0, base * orig_pct / 100.0 / units)
+    if frac >= 1.0 - 1e-6:
+        frac = 1.0
+    return idx, mult, frac * 100.0, orig_pct
 
 
 @dataclass
@@ -913,7 +1083,7 @@ class PaperBot:
                 elapsed = now - pos["ath_timer"]
                 in_high = (
                     params.use_high_mc_threshold
-                    and current > params.high_mc_threshold
+                    and current > params.high_mc_level(pos["entry_mc"])
                 )
                 if in_high:
                     if (
@@ -940,7 +1110,7 @@ class PaperBot:
                 pos["ath_timer"] = time.time()
             entry = pos["entry_mc"]
             ath = pos["ath"]
-            high = params.high_mc_threshold
+            high = params.high_mc_level(entry)
             use_high = params.use_high_mc_threshold
 
         if usd_mc > 1_000:
@@ -962,6 +1132,25 @@ class PaperBot:
             if ath_high_hit:
                 await self._close_position(mint, usd_mc, "Stoploss (high MC)")
                 return
+
+        if params.use_take_profit:
+            with self._lock:
+                live_pos = self.open_positions.get(mint)
+                due = take_profit_due(params, live_pos, usd_mc) if live_pos else None
+                if due:
+                    # Claim the tier before awaiting so overlapping updates can't sell it twice
+                    live_pos["tp_idx"] = due[0] + 1
+            if due:
+                idx, mult, pct, orig_pct = due
+                ok, _msg = await self._sell_fraction(
+                    mint, usd_mc, pct / 100.0, f"Take profit {mult:g}x ({orig_pct:g}% of original)"
+                )
+                if not ok:
+                    with self._lock:
+                        live_pos = self.open_positions.get(mint)
+                        if live_pos is not None:
+                            live_pos["tp_idx"] = idx
+                            live_pos["tp_retry_at"] = time.time() + TAKE_PROFIT_RETRY_SEC
 
         if reason_hint:
             await self._close_position(mint, usd_mc, reason_hint)

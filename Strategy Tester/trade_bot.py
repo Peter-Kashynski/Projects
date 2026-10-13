@@ -22,9 +22,11 @@ from paper_bot import (
     DEFAULT_SOL_PRICE,
     PP_API_KEY_MIN_LEN,
     PP_API_KEY_PROBE_MINT,
+    TAKE_PROFIT_RETRY_SEC,
     StrategyParams,
     TradeRecord,
     check_top_ten,
+    take_profit_due,
     top_holder_max_skip_message,
     get_volume,
     holder_top_pct,
@@ -903,14 +905,11 @@ class TradeBot:
                             }
                             self.buy_count += 1
                         await self._ensure_buy_limit_paused()
+                        buy_tx_text = f" | https://solscan.io/tx/{tx_sig}" if tx_sig else ""
                         self._log(
                             f"BUY OK {ticker} @ MC {entry} | {spent_note}"
-                            f"{boost_note} — {link}",
+                            f"{boost_note} — {link}{buy_tx_text}",
                             "buy",
-                        )
-                        self._log(
-                            f"Solscan buy {ticker}: https://solscan.io/tx/{tx_sig}",
-                            "tx",
                         )
 
             except websockets.exceptions.ConnectionClosedError:
@@ -946,7 +945,7 @@ class TradeBot:
                 elapsed = now - pos["ath_timer"]
                 in_high = (
                     params.use_high_mc_threshold
-                    and current > params.high_mc_threshold
+                    and current > params.high_mc_level(pos["entry_mc"])
                 )
                 if in_high:
                     if (
@@ -970,7 +969,7 @@ class TradeBot:
                 pos["ath_timer"] = time.time()
             entry = pos["entry_mc"]
             ath = pos["ath"]
-            high = params.high_mc_threshold
+            high = params.high_mc_level(entry)
             use_high = params.use_high_mc_threshold
 
         if usd_mc > 1_000:
@@ -992,6 +991,25 @@ class TradeBot:
             if ath_high_hit:
                 await self._close_position(mint, usd_mc, "Stoploss (high MC)")
                 return
+
+        if params.use_take_profit:
+            with self._lock:
+                live_pos = self.open_positions.get(mint)
+                due = take_profit_due(params, live_pos, usd_mc) if live_pos else None
+                if due:
+                    # Claim the tier before awaiting so overlapping updates can't sell it twice
+                    live_pos["tp_idx"] = due[0] + 1
+            if due:
+                idx, mult, pct, orig_pct = due
+                ok, _msg = await self._sell_fraction(
+                    mint, usd_mc, pct / 100.0, f"Take profit {mult:g}x ({orig_pct:g}% of original)"
+                )
+                if not ok:
+                    with self._lock:
+                        live_pos = self.open_positions.get(mint)
+                        if live_pos is not None:
+                            live_pos["tp_idx"] = idx
+                            live_pos["tp_retry_at"] = time.time() + TAKE_PROFIT_RETRY_SEC
 
         if reason_hint:
             await self._close_position(mint, usd_mc, reason_hint)
@@ -1039,14 +1057,11 @@ class TradeBot:
         gain = ((exit_mc - entry) / entry) * 100 if entry else 0
         cost_basis = sol_spent * fraction
         if sol_delta is not None:
-            sol_received = sol_delta
-            trade_pnl = sol_received - cost_basis
-            pnl_note = (
-                f"recv {sol_received:+.6f} SOL | actual {trade_pnl:+.6f} SOL"
-            )
+            trade_pnl = sol_delta - cost_basis
         else:
+            # Wallet delta unavailable: estimate from the MC move
             trade_pnl = cost_basis * (gain / 100) if cost_basis else 0.0
-            pnl_note = f"est {trade_pnl:+.6f} SOL (MC; wallet delta unavailable)"
+        pnl_estimated = sol_delta is None
 
         remaining_frac = 1.0 - fraction
         full_close = remaining_frac <= 1e-9 or fraction >= 1.0 - 1e-9
@@ -1070,24 +1085,28 @@ class TradeBot:
                 sell_tx=tx_sig or None,
             )
             self.trades.append(record)
-            pnl = self.realized_pnl_sol
+            # Running PnL for this coin across all of its partial sells (shown once it's fully sold)
+            coin_pnl = float(pos.get("trade_pnl_sol") or 0.0) + trade_pnl
+            coin_pnl_estimated = bool(pos.get("trade_pnl_est")) or pnl_estimated
             if full_close:
                 self.open_positions.pop(mint, None)
             else:
+                pos["trade_pnl_sol"] = coin_pnl
+                pos["trade_pnl_est"] = coin_pnl_estimated
                 for key in ("buy_sol", "sol_spent", "entry_units"):
                     if key in pos and pos[key] is not None:
                         pos[key] = float(pos[key]) * remaining_frac
 
+        if full_close:
+            pnl_text = f"PnL {coin_pnl:+.6f} SOL{' (est)' if coin_pnl_estimated else ''} | "
+        else:
+            pnl_text = ""
+        sell_tx_text = f" | https://solscan.io/tx/{tx_sig}" if tx_sig else ""
         self._log(
             f"SELL OK {ticker} @ MC {exit_mc} | MC {gain:+.2f}% | sold {sell_pct}% | "
-            f"{pnl_note} | session PnL {pnl:+.6f} SOL | {reason} — {link}",
+            f"{pnl_text}{reason} — {link}{sell_tx_text}",
             "sell",
         )
-        if tx_sig:
-            self._log(
-                f"Solscan sell {ticker}: https://solscan.io/tx/{tx_sig}",
-                "tx",
-            )
         if full_close:
             ws = getattr(self, "_feed_ws", None)
             watched = getattr(self, "_watched_tokens", None)

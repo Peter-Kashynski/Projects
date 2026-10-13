@@ -64,6 +64,33 @@ header {
 .header-wallet-wrap {
   position: relative;
 }
+.usd-toggle {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.usd-toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.usd-toggle[hidden] { display: none !important; }
+.stat-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 1.35rem;
+}
 .header-wallet-wrap[hidden] { display: none !important; }
 .header-wallet-balance {
   display: inline-flex;
@@ -1559,6 +1586,68 @@ main {
 .param[data-enable="use_high_mc_threshold"] + .param[data-parent="use_high_mc_threshold"] {
   margin-top: 0.15rem;
 }
+/* Exit section sub-sections (Stoploss / Take profit / Other stops / High MC threshold) */
+.exit-subsection { margin-top: 1rem; }
+.exit-subsection:first-child { margin-top: 0; }
+.subsection-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.subsection-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.subsection-note {
+  margin: -0.15rem 0 0.5rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+/* Take profit level rows */
+.tp-rows { display: grid; gap: 0.45rem; }
+.tp-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.4rem;
+  align-items: end;
+}
+.tp-btn {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.tp-btn:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.tp-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.tp-remove {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+.tp-add { justify-self: start; margin-top: 0.1rem; }
 .opt-bound {
   display: flex;
   flex-direction: column;
