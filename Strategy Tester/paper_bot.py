@@ -290,6 +290,39 @@ class StrategyParams:
         return None
 
 
+# Built-in Recommended preset. The blank form still uses StrategyParams defaults;
+# "Use recommended settings" applies this set instead of snapshotting the form.
+RECOMMENDED_BUY_SOL = 0.001
+RECOMMENDED_PARAMS = asdict(
+    StrategyParams(
+        volume_boost_multiplier=0.0,
+        top_holder_boost_below_pct=0.0,
+        top_holder_boost_multiplier=0.0,
+        top3_boost_below_pct=0.0,
+        top3_boost_multiplier=0.0,
+        stoploss_entry_ratio=0.9,
+        stoploss_ath_low=0.8,
+        stoploss_ath_high=0.8,
+        ban_on_low_volume=False,
+        use_ath_stagnation=False,
+        use_ath_stagnation_high=False,
+        top_holder_max_pct=10.0,
+        enforce_top_holder_min=False,
+        top3_max_pct=25.0,
+        enforce_top3_max=True,
+        max_buys=3.0,
+        wallet_stop_value=1.0,
+    )
+)
+RECOMMENDED_PARAMS["buy_sol"] = RECOMMENDED_BUY_SOL
+
+
+def recommended_params() -> dict[str, Any]:
+    out = dict(RECOMMENDED_PARAMS)
+    out["take_profit_levels"] = [dict(level) for level in out.get("take_profit_levels") or []]
+    return out
+
+
 def take_profit_due(
     params: StrategyParams, pos: dict[str, Any], usd_mc: float
 ) -> tuple[int, float, float, float] | None:

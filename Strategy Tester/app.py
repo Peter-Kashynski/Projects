@@ -32,7 +32,7 @@ from auth_users import (
     verify_login,
 )
 from config import PP_MIN_SOL, get_sol_price, get_wallet_sol
-from paper_bot import StrategyParams, bot
+from paper_bot import StrategyParams, bot, recommended_params
 from pp_wallet import create_pp_wallet
 from sim_bot import sim_bot
 from preset_store import (
@@ -86,8 +86,17 @@ def _session_user() -> dict | None:
     return get_user(email)
 
 
+def _drop_stale_login() -> None:
+    """Render's disk is ephemeral. A leftover cookie after users.json is wiped
+    must not keep bouncing / ↔ /login."""
+    if session.get("user_email") and _session_user() is None:
+        session.clear()
+
+
 def _is_authed() -> bool:
-    return bool(session.get("user_email") or session.get("guest"))
+    if _session_user() is not None:
+        return True
+    return bool(session.get("guest"))
 
 
 def login_required(view):
@@ -104,6 +113,7 @@ def login_required(view):
 
 @app.before_request
 def _require_login():
+    _drop_stale_login()
     if request.endpoint in (
         "login_page",
         "api_auth_login",
@@ -177,7 +187,8 @@ def _busy_other(*, excluding: str) -> str | None:
 
 @app.route("/login")
 def login_page():
-    if session.get("user_email"):
+    _drop_stale_login()
+    if _session_user() is not None:
         return redirect(url_for("index"))
     return render_template("login.html")
 
@@ -336,6 +347,7 @@ def index():
     return render_template(
         "index.html",
         defaults=StrategyParams(),
+        recommended=recommended_params(),
         buy_sol_default=BUY_SOL_DEFAULT,
         user_email=(user or {}).get("email") or "",
         has_account=bool(user),

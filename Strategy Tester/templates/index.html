@@ -389,7 +389,7 @@
           <div class="settings-block-body" id="presetsSectionBody">
             <div class="presets-head">
               <span class="presets-sub">{% if has_account %}Synced to account{% else %}3 per tab{% endif %}</span>
-              <button type="button" class="presets-rec" id="presetsRecBtn">Need a recommendation with these settings?</button>
+              <button type="button" class="presets-rec" id="presetsRecBtn">Use recommended settings</button>
             </div>
             <div class="presets-slots" id="presetsSlots"></div>
           </div>
@@ -2238,6 +2238,7 @@
     // ---- Take profit levels (dynamic rows; inputs have no `name`, read via readTakeProfitLevels) ----
     const TP_MAX_LEVELS = 6;
     const TP_DEFAULT_LEVELS = {{ defaults.take_profit_levels|tojson }};
+    const RECOMMENDED_PARAMS = {{ recommended|tojson }};
     const tpRowsEl = () => document.getElementById("takeProfitRows");
 
     function tpCell(value) {
@@ -2668,6 +2669,15 @@
       return -1;
     }
 
+    function findRecommendedPresetSlot() {
+      const store = loadPresetsStore();
+      for (let i = 0; i < PRESET_SLOT_COUNT; i++) {
+        const name = store[activeMode].slots[i]?.name;
+        if (name && String(name).trim().toLowerCase() === "recommended") return i;
+      }
+      return -1;
+    }
+
     async function writePresetSlot(slotIdx, name, params) {
       const store = loadPresetsStore();
       store[activeMode].slots[slotIdx] = { name, params };
@@ -2681,7 +2691,8 @@
 
     async function saveSettingsToNextOpenSlot() {
       if (botRunning) return;
-      const openIdx = findNextOpenPresetSlot();
+      const existingIdx = findRecommendedPresetSlot();
+      const openIdx = existingIdx >= 0 ? existingIdx : findNextOpenPresetSlot();
       const tabLabel = presetTabLabel();
       if (openIdx < 0) {
         const store = loadPresetsStore();
@@ -2698,18 +2709,25 @@
         });
         return;
       }
+      const params = {
+        ...RECOMMENDED_PARAMS,
+        take_profit_levels: (RECOMMENDED_PARAMS.take_profit_levels || []).map((level) => ({ ...level })),
+      };
+      applyParamsToForm(params);
       const entered = await showPresetDialog({
         mode: "input",
         variant: "save",
-        title: "Save to preset",
-        body: `Save your current ${tabLabel} settings to slot ${openIdx + 1}?`,
+        title: "Save recommended settings",
+        body: existingIdx >= 0
+          ? `Replace the ${tabLabel} “Recommended” preset in slot ${openIdx + 1} with the built-in recommended settings (entry stoploss 0.90, ATH stoploss 0.80, take profit 50/25/25)?`
+          : `Apply the built-in recommended ${tabLabel} settings (entry stoploss 0.90, ATH stoploss 0.80, take profit 50/25/25) and save them to slot ${openIdx + 1}?`,
         value: "Recommended",
-        okLabel: "Save preset",
+        okLabel: "Save recommended",
       });
       if (entered == null) return;
       const name = entered.trim();
       if (!name) return;
-      await writePresetSlot(openIdx, name, formParams());
+      await writePresetSlot(openIdx, name, params);
     }
 
     async function loadPresetSlot(slotIdx) {
