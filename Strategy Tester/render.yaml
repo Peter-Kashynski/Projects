@@ -8,8 +8,15 @@ services:
     # timeout 0: the live event stream stays open. A short timeout kills the
     # process while that stream is running, which freezes clicks on the site.
     startCommand: python -m gunicorn app:app --bind 0.0.0.0:$PORT --worker-class gthread --workers 1 --threads 8 --timeout 0
+    # Persistent disk (paid plans only). Mount path must match STONKBOT_DATA_DIR.
+    disk:
+      name: stonkbot-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: STONKBOT_SESSION_SECURE
         value: "1"
       - key: PYTHON_VERSION
         value: "3.12.8"
+      - key: STONKBOT_DATA_DIR
+        value: /var/data

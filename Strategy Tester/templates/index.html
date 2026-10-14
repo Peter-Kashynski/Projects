@@ -2239,6 +2239,21 @@
     const TP_MAX_LEVELS = 6;
     const TP_DEFAULT_LEVELS = {{ defaults.take_profit_levels|tojson }};
     const RECOMMENDED_PARAMS = {{ recommended|tojson }};
+
+    function isRecommendedName(name) {
+      return String(name || "").trim().toLowerCase() === "recommended";
+    }
+
+    function cloneRecommendedParams() {
+      const src = RECOMMENDED_PARAMS && typeof RECOMMENDED_PARAMS === "object" ? RECOMMENDED_PARAMS : {};
+      return {
+        ...src,
+        stoploss_entry_ratio: 0.9,
+        stoploss_ath_low: 0.8,
+        stoploss_ath_high: src.stoploss_ath_high ?? 0.8,
+        take_profit_levels: (src.take_profit_levels || []).map((level) => ({ ...level })),
+      };
+    }
     const tpRowsEl = () => document.getElementById("takeProfitRows");
 
     function tpCell(value) {
@@ -2503,6 +2518,7 @@
     async function loadPresetsFromServer() {
       if (!hasAccount) {
         loadParams();
+        await migrateRecommendedSlots();
         return;
       }
       try {
@@ -2510,6 +2526,7 @@
         let data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) {
           loadParams();
+          await migrateRecommendedSlots();
           return;
         }
         if (isServerPresetStateEmpty(data.presets, data.modeParams) && hasLocalPresetData()) {
@@ -2527,8 +2544,10 @@
           }
         }
         applyServerPresetState(data.presets, data.modeParams);
+        await migrateRecommendedSlots();
       } catch (_) {
         loadParams();
+        await migrateRecommendedSlots();
       }
     }
 
@@ -2672,10 +2691,35 @@
     function findRecommendedPresetSlot() {
       const store = loadPresetsStore();
       for (let i = 0; i < PRESET_SLOT_COUNT; i++) {
-        const name = store[activeMode].slots[i]?.name;
-        if (name && String(name).trim().toLowerCase() === "recommended") return i;
+        if (isRecommendedName(store[activeMode].slots[i]?.name)) return i;
       }
       return -1;
+    }
+
+    async function migrateRecommendedSlots() {
+      const rec = cloneRecommendedParams();
+      const store = loadPresetsStore();
+      let changed = false;
+      for (const mode of ["sim", "live", "trade"]) {
+        for (let i = 0; i < PRESET_SLOT_COUNT; i++) {
+          const slot = store[mode].slots[i];
+          if (!slot || !isRecommendedName(slot.name)) continue;
+          const entry = Number(slot.params?.stoploss_entry_ratio);
+          if (entry === 0.9) continue;
+          store[mode].slots[i] = { name: slot.name || "Recommended", params: rec };
+          changed = true;
+          await apiPutPresetSlot(mode, i, store[mode].slots[i].name, rec, store[mode].activeSlot);
+        }
+      }
+      if (!changed) return;
+      savePresetsStoreLocal(store);
+      const active = store[activeMode];
+      const activeSlot = Number.isInteger(active?.activeSlot) ? active.slots[active.activeSlot] : null;
+      if (isRecommendedName(activeSlot?.name)) {
+        applyParamsToForm(rec);
+        saveParamsForMode(activeMode, rec, { flush: true });
+      }
+      renderPresetsBar();
     }
 
     async function writePresetSlot(slotIdx, name, params) {
@@ -2709,10 +2753,7 @@
         });
         return;
       }
-      const params = {
-        ...RECOMMENDED_PARAMS,
-        take_profit_levels: (RECOMMENDED_PARAMS.take_profit_levels || []).map((level) => ({ ...level })),
-      };
+      const params = cloneRecommendedParams();
       applyParamsToForm(params);
       const entered = await showPresetDialog({
         mode: "input",
@@ -2734,12 +2775,17 @@
       const store = loadPresetsStore();
       const slot = store[activeMode].slots[slotIdx];
       if (!slot?.params) return;
+      const params = isRecommendedName(slot.name) ? cloneRecommendedParams() : slot.params;
       store[activeMode].activeSlot = slotIdx;
       savePresetsStoreLocal(store);
-      applyParamsToForm(slot.params);
-      saveParamsForMode(activeMode, slot.params);
+      applyParamsToForm(params);
+      saveParamsForMode(activeMode, params);
       renderPresetsBar();
-      const synced = await apiPutModeParams(activeMode, slot.params, slotIdx);
+      if (isRecommendedName(slot.name)) {
+        await writePresetSlot(slotIdx, slot.name || "Recommended", params);
+        return;
+      }
+      const synced = await apiPutModeParams(activeMode, params, slotIdx);
       if (synced) applyServerPresetState(synced.presets, synced.modeParams);
     }
 
