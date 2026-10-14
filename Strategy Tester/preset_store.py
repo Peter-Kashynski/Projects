@@ -230,6 +230,7 @@ def save_preset_slot(
                     INSERT INTO user_mode_params (user_email, mode, params, active_slot, updated_at)
                     VALUES (?, ?, ?, ?, ?)
                     ON CONFLICT(user_email, mode) DO UPDATE SET
+                        params = excluded.params,
                         active_slot = excluded.active_slot,
                         updated_at = excluded.updated_at
                     """,

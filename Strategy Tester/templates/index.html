@@ -389,7 +389,7 @@
           <div class="settings-block-body" id="presetsSectionBody">
             <div class="presets-head">
               <span class="presets-sub">{% if has_account %}Synced to account{% else %}3 per tab{% endif %}</span>
-              <button type="button" class="presets-rec" id="presetsRecBtn">Use recommended settings</button>
+              <button type="button" class="presets-rec" id="presetsRecBtn">Need a recommendation?</button>
             </div>
             <div class="presets-slots" id="presetsSlots"></div>
           </div>
@@ -986,6 +986,7 @@
     const accountCredsFields = document.getElementById("accountCredsFields");
     const accountUsingNote = document.getElementById("accountUsingNote");
     const hasAccount = {{ "true" if has_account else "false" }};
+    const userEmail = String({{ user_email|tojson }} || "").trim().toLowerCase();
     let accountHeliusStored = "";
     const tradePubkeyInput = document.getElementById("tradePubkey");
     const tradePrivkeyInput = document.getElementById("tradePrivkey");
@@ -2061,6 +2062,7 @@
       try {
         await fetch("/api/auth/logout", { method: "POST" });
       } catch (_) {}
+      clearLocalPresetCache();
       window.location.href = "/login";
     });
 
@@ -2251,6 +2253,7 @@
         stoploss_entry_ratio: 0.9,
         stoploss_ath_low: 0.8,
         stoploss_ath_high: src.stoploss_ath_high ?? 0.8,
+        buy_sol: src.buy_sol ?? 0.001,
         take_profit_levels: (src.take_profit_levels || []).map((level) => ({ ...level })),
       };
     }
@@ -2420,6 +2423,32 @@
 
     let modeParamsSyncTimer = null;
 
+    const PRESET_OWNER_KEY = "stonkbot_preset_owner_v1";
+
+    function presetOwnerId() {
+      return hasAccount && userEmail ? `account:${userEmail}` : "guest";
+    }
+
+    function readPresetOwner() {
+      try {
+        return localStorage.getItem(PRESET_OWNER_KEY) || "";
+      } catch (_) {
+        return "";
+      }
+    }
+
+    function writePresetOwner(id) {
+      try {
+        localStorage.setItem(PRESET_OWNER_KEY, id);
+      } catch (_) {}
+    }
+
+    function clearLocalPresetCache() {
+      savePresetsStoreLocal(emptyPresetsStore());
+      saveModeParamsStore({ sim: null, live: null, trade: null });
+      writePresetOwner("");
+    }
+
     function hasLocalPresetData() {
       const presets = loadPresetsStore();
       for (const mode of ["sim", "live", "trade"]) {
@@ -2427,6 +2456,15 @@
       }
       const modeParams = loadModeParamsStore();
       return ["sim", "live", "trade"].some((m) => modeParams[m] && typeof modeParams[m] === "object");
+    }
+
+    function shouldImportLocalPresets() {
+      if (!hasLocalPresetData()) return false;
+      const owner = readPresetOwner();
+      if (owner === presetOwnerId()) return true;
+      // Same browser just created an account from guest — keep those slots.
+      if (hasAccount && owner === "guest") return true;
+      return false;
     }
 
     function isServerPresetStateEmpty(presets, modeParams) {
@@ -2517,8 +2555,12 @@
 
     async function loadPresetsFromServer() {
       if (!hasAccount) {
+        if (String(readPresetOwner()).startsWith("account:")) {
+          clearLocalPresetCache();
+          writePresetOwner("guest");
+        }
         loadParams();
-        await migrateRecommendedSlots();
+        writePresetOwner(presetOwnerId());
         return;
       }
       try {
@@ -2526,10 +2568,12 @@
         let data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) {
           loadParams();
-          await migrateRecommendedSlots();
           return;
         }
-        if (isServerPresetStateEmpty(data.presets, data.modeParams) && hasLocalPresetData()) {
+        if (
+          isServerPresetStateEmpty(data.presets, data.modeParams) &&
+          shouldImportLocalPresets()
+        ) {
           const importRes = await fetch("/api/presets/import", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -2544,10 +2588,9 @@
           }
         }
         applyServerPresetState(data.presets, data.modeParams);
-        await migrateRecommendedSlots();
+        writePresetOwner(presetOwnerId());
       } catch (_) {
         loadParams();
-        await migrateRecommendedSlots();
       }
     }
 
@@ -2592,22 +2635,30 @@
       saveModeParamsStore({ sim: legacy, live: legacy, trade: legacy });
     }
 
+    let applyingParams = false;
+
     function applyParamsToForm(saved) {
       if (!saved || typeof saved !== "object") return;
-      form.querySelectorAll("input[name]").forEach((el) => {
-        if (!(el.name in saved)) return;
-        const val = saved[el.name];
-        if (el.type === "checkbox") {
-          el.checked = !!val;
-        } else if (el.type === "number") {
-          if (val !== null && val !== undefined && val !== "" && !Number.isNaN(Number(val))) {
-            el.value = String(val);
+      applyingParams = true;
+      try {
+        form.querySelectorAll("input[name]").forEach((el) => {
+          if (!(el.name in saved)) return;
+          const val = saved[el.name];
+          if (el.type === "checkbox") {
+            el.checked = !!val;
+          } else if (el.type === "number") {
+            if (val !== null && val !== undefined && val !== "" && !Number.isNaN(Number(val))) {
+              el.value = String(val);
+            }
           }
-        }
-      });
-      if (Array.isArray(saved.take_profit_levels)) renderTakeProfitRows(saved.take_profit_levels);
-      syncParamEnabled();
-      syncWalletStopLabels();
+        });
+        if (Array.isArray(saved.take_profit_levels)) renderTakeProfitRows(saved.take_profit_levels);
+        syncParamEnabled();
+        syncWalletStopLabels();
+        syncStepperDisabled();
+      } finally {
+        applyingParams = false;
+      }
     }
 
     function saveParamsForMode(mode, params, opts = {}) {
@@ -2696,49 +2747,26 @@
       return -1;
     }
 
-    async function migrateRecommendedSlots() {
-      const rec = cloneRecommendedParams();
-      const store = loadPresetsStore();
-      let changed = false;
-      for (const mode of ["sim", "live", "trade"]) {
-        for (let i = 0; i < PRESET_SLOT_COUNT; i++) {
-          const slot = store[mode].slots[i];
-          if (!slot || !isRecommendedName(slot.name)) continue;
-          const entry = Number(slot.params?.stoploss_entry_ratio);
-          if (entry === 0.9) continue;
-          store[mode].slots[i] = { name: slot.name || "Recommended", params: rec };
-          changed = true;
-          await apiPutPresetSlot(mode, i, store[mode].slots[i].name, rec, store[mode].activeSlot);
-        }
-      }
-      if (!changed) return;
-      savePresetsStoreLocal(store);
-      const active = store[activeMode];
-      const activeSlot = Number.isInteger(active?.activeSlot) ? active.slots[active.activeSlot] : null;
-      if (isRecommendedName(activeSlot?.name)) {
-        applyParamsToForm(rec);
-        saveParamsForMode(activeMode, rec, { flush: true });
-      }
-      renderPresetsBar();
-    }
-
     async function writePresetSlot(slotIdx, name, params) {
       const store = loadPresetsStore();
       store[activeMode].slots[slotIdx] = { name, params };
       store[activeMode].activeSlot = slotIdx;
       savePresetsStoreLocal(store);
-      saveParamsForMode(activeMode, params);
+      applyParamsToForm(params);
+      saveParamsForMode(activeMode, params, { flush: true });
       renderPresetsBar();
       const synced = await apiPutPresetSlot(activeMode, slotIdx, name, params, slotIdx);
       if (synced) applyServerPresetState(synced.presets, synced.modeParams);
+      applyParamsToForm(params);
+      saveParamsForMode(activeMode, params, { flush: true });
     }
 
-    async function saveSettingsToNextOpenSlot() {
+    async function applyRecommendedSettings() {
       if (botRunning) return;
       const existingIdx = findRecommendedPresetSlot();
-      const openIdx = existingIdx >= 0 ? existingIdx : findNextOpenPresetSlot();
+      const slotIdx = existingIdx >= 0 ? existingIdx : findNextOpenPresetSlot();
       const tabLabel = presetTabLabel();
-      if (openIdx < 0) {
+      if (slotIdx < 0) {
         const store = loadPresetsStore();
         const filled = store[activeMode].slots
           .map((s, i) => (s?.name ? `Slot ${i + 1}: ${s.name}` : null))
@@ -2753,40 +2781,35 @@
         });
         return;
       }
-      const params = cloneRecommendedParams();
-      applyParamsToForm(params);
       const entered = await showPresetDialog({
         mode: "input",
         variant: "save",
         title: "Save recommended settings",
         body: existingIdx >= 0
-          ? `Replace the ${tabLabel} “Recommended” preset in slot ${openIdx + 1} with the built-in recommended settings (entry stoploss 0.90, ATH stoploss 0.80, take profit 50/25/25)?`
-          : `Apply the built-in recommended ${tabLabel} settings (entry stoploss 0.90, ATH stoploss 0.80, take profit 50/25/25) and save them to slot ${openIdx + 1}?`,
+          ? `Replace the ${tabLabel} “Recommended” preset in slot ${slotIdx + 1} with the built-in recommended settings (entry stoploss 0.90, ATH stoploss 0.80, take profit 50/25/25)?`
+          : `Apply the built-in recommended ${tabLabel} settings (entry stoploss 0.90, ATH stoploss 0.80, take profit 50/25/25) and save them to slot ${slotIdx + 1}?`,
         value: "Recommended",
         okLabel: "Save recommended",
       });
       if (entered == null) return;
-      const name = entered.trim();
-      if (!name) return;
-      await writePresetSlot(openIdx, name, params);
+      const name = entered.trim() || "Recommended";
+      const params = cloneRecommendedParams();
+      await writePresetSlot(slotIdx, name, params);
     }
 
     async function loadPresetSlot(slotIdx) {
       const store = loadPresetsStore();
       const slot = store[activeMode].slots[slotIdx];
       if (!slot?.params) return;
-      const params = isRecommendedName(slot.name) ? cloneRecommendedParams() : slot.params;
+      const params = slot.params;
       store[activeMode].activeSlot = slotIdx;
       savePresetsStoreLocal(store);
       applyParamsToForm(params);
-      saveParamsForMode(activeMode, params);
+      saveParamsForMode(activeMode, params, { flush: true });
       renderPresetsBar();
-      if (isRecommendedName(slot.name)) {
-        await writePresetSlot(slotIdx, slot.name || "Recommended", params);
-        return;
-      }
       const synced = await apiPutModeParams(activeMode, params, slotIdx);
       if (synced) applyServerPresetState(synced.presets, synced.modeParams);
+      applyParamsToForm(params);
     }
 
     async function savePresetSlot(slotIdx) {
@@ -2858,7 +2881,7 @@
     }
 
     function wirePresetsBar() {
-      document.getElementById("presetsRecBtn")?.addEventListener("click", saveSettingsToNextOpenSlot);
+      document.getElementById("presetsRecBtn")?.addEventListener("click", applyRecommendedSettings);
       const container = document.getElementById("presetsSlots");
       if (!container) return;
       container.addEventListener("click", (e) => {
@@ -3160,11 +3183,15 @@
     }
 
     form.addEventListener("change", (e) => {
+      if (applyingParams) return;
       if (e.target.matches('input[type="checkbox"]')) syncParamEnabled();
       if (e.target.name === "wallet_stop_is_pct") syncWalletStopLabels();
       saveParams();
     });
-    form.addEventListener("input", () => saveParams());
+    form.addEventListener("input", () => {
+      if (applyingParams) return;
+      saveParams();
+    });
 
     document.querySelectorAll(".info-btn").forEach((btn) => {
       btn.addEventListener("click", () => showInfo(btn.dataset.info));

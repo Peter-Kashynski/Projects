@@ -13,9 +13,12 @@ _PROJECT_ROOT = Path(__file__).resolve().parent
 _resolved: Path | None = None
 
 
-def _try_data_dir(path: Path) -> Path | None:
+def _try_data_dir(path: Path, *, create: bool = True) -> Path | None:
     try:
-        path.mkdir(parents=True, exist_ok=True)
+        if create:
+            path.mkdir(parents=True, exist_ok=True)
+        elif not path.is_dir():
+            return None
         probe = path / ".write_test"
         probe.write_text("", encoding="utf-8")
         probe.unlink(missing_ok=True)
@@ -27,32 +30,31 @@ def _try_data_dir(path: Path) -> Path | None:
 def project_data_dir() -> Path:
     """Directory for users, presets, and the Flask secret.
 
-    Order: STONKBOT_DATA_DIR, then /var/data (Render disk), then ./data.
-    Unwritable paths are skipped with no log line.
+    Order: STONKBOT_DATA_DIR, then an already-mounted /var/data (Linux/Render
+    only — never created, and never used on Windows), then ./data.
     """
     global _resolved
     if _resolved is not None:
         return _resolved
 
     default = _PROJECT_ROOT / "data"
-    candidates: list[Path] = []
     raw = (os.getenv("STONKBOT_DATA_DIR") or "").strip()
     if raw:
-        candidates.append(Path(raw).expanduser().resolve())
-    candidates.append(Path("/var/data"))
-    candidates.append(default)
-
-    seen: set[Path] = set()
-    for path in candidates:
-        if path in seen:
-            continue
-        seen.add(path)
-        resolved = _try_data_dir(path)
+        preferred = Path(raw).expanduser().resolve()
+        resolved = _try_data_dir(preferred, create=True)
         if resolved is not None:
             _resolved = resolved
             return _resolved
 
-    raise PermissionError(
-        "Cannot create a writable data directory at "
-        + ", ".join(str(p) for p in candidates)
-    )
+    # Render disk mount. Do not mkdir: on Windows /var/data is C:\var\data.
+    if os.name != "nt":
+        mounted = _try_data_dir(Path("/var/data"), create=False)
+        if mounted is not None:
+            _resolved = mounted
+            return _resolved
+
+    resolved = _try_data_dir(default, create=True)
+    if resolved is not None:
+        _resolved = resolved
+        return _resolved
+    raise PermissionError(f"Cannot create a writable data directory at {default}")
