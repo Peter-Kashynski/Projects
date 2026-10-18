@@ -67,6 +67,18 @@ def _load_secret_key() -> str:
 
 
 app.secret_key = _load_secret_key()
+try:
+    from data_paths import project_data_dir as _data_dir
+
+    _data = _data_dir()
+    _users = _data / "users.json"
+    print(
+        f"StonkBot data dir: {_data} "
+        f"(users.json {'present' if _users.exists() else 'missing'})",
+        flush=True,
+    )
+except Exception as _data_err:
+    print(f"StonkBot data dir: unavailable ({_data_err})", flush=True)
 _session_secure = os.getenv("STONKBOT_SESSION_SECURE", "").strip().lower() in (
     "1",
     "true",

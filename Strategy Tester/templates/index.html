@@ -49,6 +49,47 @@
       </div>
       <div class="header-top-right">
         <div class="header-user-row">
+          <div class="header-pnl-cal-wrap" id="headerPnlCalWrap">
+            <button
+              type="button"
+              class="header-pnl-cal-btn"
+              id="headerPnlCalBtn"
+              aria-expanded="false"
+              aria-controls="headerPnlCalMenu"
+              title="Monthly PnL calendar"
+            >
+              <svg class="header-pnl-cal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="16" rx="2"/>
+                <path d="M3 9h18"/>
+                <path d="M8 3v4M16 3v4"/>
+              </svg>
+            </button>
+            <div class="header-pnl-cal-menu" id="headerPnlCalMenu" hidden>
+              <div class="header-pnl-cal-head">
+                <span class="header-pnl-cal-brand">PNL Calendar</span>
+                <div class="header-pnl-cal-head-right">
+                  <button type="button" class="header-pnl-cal-nav" id="pnlCalPrev" aria-label="Previous month">‹</button>
+                  <span class="header-pnl-cal-title" id="pnlCalTitle">—</span>
+                  <button type="button" class="header-pnl-cal-nav" id="pnlCalNext" aria-label="Next month">›</button>
+                  <button type="button" class="header-pnl-cal-unit" data-usd-toggle="cal" id="pnlCalUnitToggle" title="Toggle USD / SOL">USD</button>
+                  <button type="button" class="header-wallet-menu-close" id="headerPnlCalClose" aria-label="Close">×</button>
+                </div>
+              </div>
+              <div class="header-pnl-cal-summary">
+                <div class="header-pnl-cal-month-pnl" id="pnlCalMonthHero">—</div>
+                <svg class="header-pnl-cal-spark" id="pnlCalSpark" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"></svg>
+                <div class="header-pnl-cal-spark-axis">
+                  <span class="up" id="pnlCalProfitDays">0 / $0</span>
+                  <span class="down" id="pnlCalLossDays">0 / $0</span>
+                </div>
+              </div>
+              <div class="header-pnl-cal-weekdays" aria-hidden="true">
+                <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+              </div>
+              <div class="header-pnl-cal-grid" id="pnlCalGrid"></div>
+              <div class="header-pnl-cal-resize" id="pnlCalResize" title="Drag to resize"></div>
+            </div>
+          </div>
           <div class="header-wallet-wrap" id="headerWalletWrap" hidden>
             <button
               type="button"
@@ -1718,6 +1759,10 @@
       document.querySelectorAll("#accountPanel .reveal-btn").forEach((btn) => {
         btn.textContent = "Show";
       });
+      if (user.created_at) {
+        const ms = Date.parse(user.created_at);
+        if (Number.isFinite(ms)) accountCreatedAtMs = ms;
+      }
       pollHeaderWallet();
     }
 
@@ -3589,8 +3634,14 @@
 
     function updateUsdToggleLabels() {
       document.querySelectorAll("[data-usd-toggle]").forEach((btn) => {
-        const compact = btn.dataset.usdToggle === "compact";
-        btn.textContent = compact ? `⇄ ${showUsd ? "SOL" : "USD"}` : showUsd ? "Show SOL" : "Show USD";
+        const kind = btn.dataset.usdToggle;
+        if (kind === "cal") {
+          btn.textContent = showUsd ? "USD" : "SOL";
+        } else if (kind === "compact") {
+          btn.textContent = `⇄ ${showUsd ? "SOL" : "USD"}`;
+        } else {
+          btn.textContent = showUsd ? "Show SOL" : "Show USD";
+        }
         btn.title = showUsd ? "Showing USD — click for SOL" : "Showing SOL — click for USD";
       });
     }
@@ -3614,6 +3665,8 @@
       updateUsdToggleLabels();
       syncHeaderAccountBalance(lastRenderState || {}); // also repaints the wallet dropdown
       if (lastRenderState?.mode === "trade") paintSessionPnlStat(lastRenderState);
+      const cal = document.getElementById("headerPnlCalMenu");
+      if (cal && !cal.hidden) paintPnlCalendar();
     }
 
     // Fetch the SOL price if we have none or it's stale (throttled so a failing price source
@@ -3632,7 +3685,8 @@
     function usdViewsOpen() {
       const menu = document.getElementById("headerWalletMenu");
       const panel = document.getElementById("accountPanel");
-      return !!((menu && !menu.hidden) || (panel && !panel.hidden));
+      const cal = document.getElementById("headerPnlCalMenu");
+      return !!((menu && !menu.hidden) || (panel && !panel.hidden) || (cal && !cal.hidden));
     }
 
     function paintWalletMenuDetails(state) {
@@ -3711,6 +3765,321 @@
       }
     }
 
+    const DAILY_PNL_KEY = "stonkbot_daily_pnl_v1";
+    let accountCreatedAtMs = null;
+    let pnlCalCursor = new Date();
+    pnlCalCursor.setDate(1);
+    pnlCalCursor.setHours(0, 0, 0, 0);
+    let pnlIngest = { mode: null, running: false, realized: null };
+
+    function pnlCalOwner() {
+      return hasAccount && userEmail ? `account:${userEmail}` : "guest";
+    }
+
+    function todayPnlKey(d = new Date()) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function loadDailyPnlStore() {
+      try {
+        const raw = localStorage.getItem(DAILY_PNL_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        if (parsed && typeof parsed === "object") return parsed;
+      } catch (_) {}
+      return {};
+    }
+
+    function saveDailyPnlStore(store) {
+      try {
+        localStorage.setItem(DAILY_PNL_KEY, JSON.stringify(store));
+      } catch (_) {}
+    }
+
+    function dailyPnlMap() {
+      const store = loadDailyPnlStore();
+      const owner = pnlCalOwner();
+      const block = store[owner];
+      return block && typeof block === "object" ? block : {};
+    }
+
+    function addDailyPnl(dayKey, deltaSol) {
+      if (!dayKey || !Number.isFinite(deltaSol) || Math.abs(deltaSol) < 1e-12) return;
+      const store = loadDailyPnlStore();
+      const owner = pnlCalOwner();
+      if (!store[owner] || typeof store[owner] !== "object") store[owner] = {};
+      const prev = Number(store[owner][dayKey] || 0);
+      store[owner][dayKey] = prev + deltaSol;
+      saveDailyPnlStore(store);
+      const menu = document.getElementById("headerPnlCalMenu");
+      if (menu && !menu.hidden) paintPnlCalendar();
+    }
+
+    function ingestDailyPnl(state) {
+      if (!state || state.mode !== "trade") {
+        pnlIngest = { mode: state?.mode || null, running: !!state?.running, realized: null };
+        return;
+      }
+      const realized = Number(state.pnl_sol);
+      if (!Number.isFinite(realized)) return;
+      const running = !!state.running;
+      if (pnlIngest.mode !== "trade" || pnlIngest.running !== running || pnlIngest.realized == null) {
+        pnlIngest = { mode: "trade", running, realized };
+        return;
+      }
+      const delta = realized - pnlIngest.realized;
+      pnlIngest.realized = realized;
+      if (delta) addDailyPnl(todayPnlKey(), delta);
+    }
+
+    function monthStart(d) {
+      return new Date(d.getFullYear(), d.getMonth(), 1);
+    }
+
+    function currentMonthStart() {
+      return monthStart(new Date());
+    }
+
+    function earliestPnlDate() {
+      const byDay = dailyPnlMap();
+      const keys = Object.keys(byDay).filter((k) => Number(byDay[k]) && Number.isFinite(Number(byDay[k])));
+      if (!keys.length) return null;
+      keys.sort();
+      const [y, m, d] = keys[0].split("-").map(Number);
+      if (!y || !m || !d) return null;
+      return new Date(y, m - 1, d);
+    }
+
+    function accountCreatedDate() {
+      if (Number.isFinite(accountCreatedAtMs)) return new Date(accountCreatedAtMs);
+      const fromPnl = earliestPnlDate();
+      if (fromPnl) return fromPnl;
+      return new Date();
+    }
+
+    function minPnlMonthStart() {
+      return monthStart(accountCreatedDate());
+    }
+
+    function clampPnlCalCursor() {
+      const min = minPnlMonthStart();
+      const max = currentMonthStart();
+      if (pnlCalCursor < min) pnlCalCursor = new Date(min.getTime());
+      if (pnlCalCursor > max) pnlCalCursor = new Date(max.getTime());
+    }
+
+    function syncPnlCalNav() {
+      const prev = document.getElementById("pnlCalPrev");
+      const next = document.getElementById("pnlCalNext");
+      const min = minPnlMonthStart().getTime();
+      const max = currentMonthStart().getTime();
+      const cur = monthStart(pnlCalCursor).getTime();
+      if (prev) prev.disabled = cur <= min;
+      if (next) next.disabled = cur >= max;
+    }
+
+    function trimCompactNum(value) {
+      return String(value).replace(/\.?0+$/, "");
+    }
+
+    function formatCompactNumber(abs) {
+      if (abs >= 1e6) return `${trimCompactNum((abs / 1e6).toFixed(2))}M`;
+      if (abs >= 1000) {
+        const k = abs / 1000;
+        const dec = k >= 100 ? 0 : k >= 10 ? 1 : 2;
+        return `${trimCompactNum(k.toFixed(dec))}K`;
+      }
+      if (abs >= 100) return trimCompactNum(abs.toFixed(1));
+      return trimCompactNum(abs.toFixed(2));
+    }
+
+    function formatCalAmount(sol, { signed = true } = {}) {
+      if (!Number.isFinite(sol) || Math.abs(sol) < 1e-12) return showUsd ? "$0" : "0";
+      if (showUsd) {
+        if (!Number.isFinite(cachedSolUsd)) return "…";
+        const usd = sol * cachedSolUsd;
+        if (Math.abs(usd) < 0.005) return "$0";
+        const sign = signed ? (usd > 0 ? "+" : "-") : (usd < 0 ? "-" : "");
+        return `${sign}$${formatCompactNumber(Math.abs(usd))}`;
+      }
+      const sign = signed ? (sol > 0 ? "+" : "-") : (sol < 0 ? "-" : "");
+      const abs = Math.abs(sol);
+      if (abs >= 1000) return `${sign}${formatCompactNumber(abs)}`;
+      if (abs >= 1) return `${sign}${trimCompactNum(abs.toFixed(3))}`;
+      return `${sign}${trimCompactNum(abs.toFixed(4))}`;
+    }
+
+    function paintPnlSpark(points) {
+      const svg = document.getElementById("pnlCalSpark");
+      if (!svg) return;
+      if (points.length < 1) {
+        svg.innerHTML = "";
+        return;
+      }
+      const w = 100;
+      const h = 24;
+      const pad = 1.6;
+      const vals = points.map((p) => p.value);
+      const min = Math.min(0, ...vals);
+      const max = Math.max(0, ...vals);
+      const span = max - min || 1;
+      const xAt = (i) => pad + (i / Math.max(points.length - 1, 1)) * (w - pad * 2);
+      const yAt = (v) => pad + (1 - (v - min) / span) * (h - pad * 2);
+      const green = [];
+      const red = [];
+      const push = (arr, xa, ya, xb, yb) => arr.push(`M${xa.toFixed(2)},${ya.toFixed(2)} L${xb.toFixed(2)},${yb.toFixed(2)}`);
+      if (points.length === 1) {
+        const y = yAt(points[0].value);
+        push(points[0].value >= 0 ? green : red, pad, y, w - pad, y);
+      } else {
+        for (let i = 1; i < points.length; i++) {
+          const a = points[i - 1].value;
+          const b = points[i].value;
+          const xa = xAt(i - 1);
+          const ya = yAt(a);
+          const xb = xAt(i);
+          const yb = yAt(b);
+          if (a >= 0 && b >= 0) push(green, xa, ya, xb, yb);
+          else if (a < 0 && b < 0) push(red, xa, ya, xb, yb);
+          else {
+            const t = a / (a - b);
+            const xz = xa + (xb - xa) * t;
+            const yz = yAt(0);
+            if (a >= 0) {
+              push(green, xa, ya, xz, yz);
+              push(red, xz, yz, xb, yb);
+            } else {
+              push(red, xa, ya, xz, yz);
+              push(green, xz, yz, xb, yb);
+            }
+          }
+        }
+      }
+      const zero = (min < 0 && max > 0)
+        ? `<path d="M${pad},${yAt(0).toFixed(2)} L${(w - pad).toFixed(2)},${yAt(0).toFixed(2)}" fill="none" stroke="currentColor" stroke-opacity="0.18" stroke-width="0.6"/>`
+        : "";
+      svg.innerHTML =
+        zero +
+        (green.length ? `<path d="${green.join(" ")}" fill="none" stroke="#3dcc8c" stroke-width="1.4" stroke-linecap="round"/>` : "") +
+        (red.length ? `<path d="${red.join(" ")}" fill="none" stroke="#e85d5d" stroke-width="1.4" stroke-linecap="round"/>` : "");
+    }
+
+    function paintPnlCalendar() {
+      const title = document.getElementById("pnlCalTitle");
+      const grid = document.getElementById("pnlCalGrid");
+      const hero = document.getElementById("pnlCalMonthHero");
+      if (!title || !grid || !hero) return;
+      clampPnlCalCursor();
+      syncPnlCalNav();
+      const year = pnlCalCursor.getFullYear();
+      const month = pnlCalCursor.getMonth();
+      const monthName = pnlCalCursor.toLocaleString(undefined, { month: "long" });
+      title.textContent = `${monthName} ${year}`;
+      const first = new Date(year, month, 1);
+      const startPad = (first.getDay() + 6) % 7;
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const byDay = dailyPnlMap();
+      const todayKey = todayPnlKey();
+      const created = accountCreatedDate();
+      created.setHours(0, 0, 0, 0);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      let monthTotal = 0;
+      let bestKey = "";
+      let bestPnl = 0;
+      const dayRows = [];
+      for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        const cellDate = new Date(year, month, d);
+        const beforeAccount = cellDate < created;
+        const afterToday = cellDate > now;
+        const pnl = beforeAccount || afterToday ? 0 : Number(byDay[key] || 0);
+        if (!afterToday && Number.isFinite(pnl)) monthTotal += pnl;
+        if (pnl > bestPnl) {
+          bestPnl = pnl;
+          bestKey = key;
+        }
+        dayRows.push({ d, key, pnl, beforeAccount, afterToday });
+      }
+      const cells = [];
+      for (let i = 0; i < startPad; i++) cells.push(`<div class="header-pnl-cal-day empty"></div>`);
+      for (const row of dayRows) {
+        if (row.afterToday || row.beforeAccount) {
+          cells.push(`<div class="header-pnl-cal-day empty"></div>`);
+          continue;
+        }
+        const isBest = row.key === bestKey && bestPnl > 1e-12;
+        const hasPnl = !row.beforeAccount && Math.abs(row.pnl) > 1e-12;
+        const cls = [
+          "header-pnl-cal-day",
+          row.key === todayKey ? "today" : "",
+          isBest ? "best" : row.pnl > 1e-12 ? "up" : row.pnl < -1e-12 ? "down" : "flat",
+        ].filter(Boolean).join(" ");
+        const pnlHtml = hasPnl ? formatCalAmount(row.pnl) : formatCalAmount(0);
+        cells.push(
+          `<div class="${cls}">` +
+            `<span class="header-pnl-cal-num">${row.d}</span>` +
+            `<span class="header-pnl-cal-dot"></span>` +
+            `<span class="header-pnl-cal-pnl">${pnlHtml}</span>` +
+          `</div>`
+        );
+      }
+      while (cells.length % 7) cells.push(`<div class="header-pnl-cal-day empty"></div>`);
+      grid.innerHTML = cells.join("");
+      hero.textContent = formatCalAmount(monthTotal);
+      hero.classList.toggle("up", monthTotal > 1e-12);
+      hero.classList.toggle("down", monthTotal < -1e-12);
+
+      let profitDays = 0;
+      let lossDays = 0;
+      let profitSol = 0;
+      let lossSol = 0;
+      const sparkPoints = [];
+      let cum = 0;
+      for (const row of dayRows) {
+        if (row.afterToday || row.beforeAccount) {
+          if (!row.afterToday) {
+            sparkPoints.push({ d: row.d, value: cum });
+          }
+          continue;
+        }
+        if (row.pnl > 1e-12) {
+          profitDays += 1;
+          profitSol += row.pnl;
+        } else if (row.pnl < -1e-12) {
+          lossDays += 1;
+          lossSol += row.pnl;
+        }
+        cum += row.pnl;
+        sparkPoints.push({ d: row.d, value: cum });
+      }
+      paintPnlSpark(sparkPoints);
+      const profitEl = document.getElementById("pnlCalProfitDays");
+      const lossEl = document.getElementById("pnlCalLossDays");
+      if (profitEl) profitEl.textContent = `${profitDays} / ${formatCalAmount(profitSol)}`;
+      if (lossEl) lossEl.textContent = `${lossDays} / ${formatCalAmount(lossSol)}`;
+    }
+
+    function setPnlCalOpen(open) {
+      const menu = document.getElementById("headerPnlCalMenu");
+      const btn = document.getElementById("headerPnlCalBtn");
+      if (!menu) return;
+      menu.hidden = !open;
+      if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) {
+        setHeaderWalletMenuOpen(false);
+        clampPnlCalCursor();
+        paintPnlCalendar();
+        ensureSolUsdPrice();
+        if (!Number.isFinite(cachedSolUsd)) {
+          lastSolUsdAttempt = Date.now();
+          refreshSolUsdPrice().then(() => paintPnlCalendar());
+        }
+      }
+    }
+
     function setHeaderWalletMenuOpen(open) {
       const menu = document.getElementById("headerWalletMenu");
       const btn = document.getElementById("headerWalletBtn");
@@ -3718,6 +4087,7 @@
       menu.hidden = !open;
       if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
       if (open) {
+        setPnlCalOpen(false);
         paintWalletMenuDetails(lastRenderState);
         ensureSolUsdPrice();
         pollHeaderWallet();
@@ -3853,6 +4223,87 @@
 
     loadHeaderWalletCache();
 
+    document.getElementById("headerPnlCalBtn")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const menu = document.getElementById("headerPnlCalMenu");
+      const opening = !!menu?.hidden;
+      if (opening) setAccountPanelOpen(false);
+      setPnlCalOpen(opening);
+    });
+    document.getElementById("headerPnlCalClose")?.addEventListener("click", () => setPnlCalOpen(false));
+    document.getElementById("pnlCalPrev")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      pnlCalCursor.setMonth(pnlCalCursor.getMonth() - 1);
+      paintPnlCalendar();
+    });
+    document.getElementById("pnlCalNext")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      pnlCalCursor.setMonth(pnlCalCursor.getMonth() + 1);
+      paintPnlCalendar();
+    });
+    document.getElementById("headerPnlCalMenu")?.addEventListener("click", (e) => e.stopPropagation());
+
+    (function initPnlCalResize() {
+      const menu = document.getElementById("headerPnlCalMenu");
+      const handle = document.getElementById("pnlCalResize");
+      if (!menu || !handle) return;
+      const SIZE_KEY = "stonkbot_pnl_cal_size";
+      const MIN_SIZE = 480;
+      const DEFAULT_SIZE = 560;
+
+      function applySize(px) {
+        const maxSize = Math.min(900, window.innerWidth - 32);
+        const minSize = Math.min(MIN_SIZE, maxSize);
+        const size = Math.max(minSize, Math.min(maxSize, Math.round(px)));
+        menu.style.setProperty("--pnl-cal-size", `${size}px`);
+        try {
+          localStorage.setItem(SIZE_KEY, JSON.stringify({ size }));
+        } catch (_) {}
+      }
+
+      try {
+        const saved = JSON.parse(localStorage.getItem(SIZE_KEY) || "null");
+        if (saved && Number.isFinite(saved.size)) applySize(saved.size);
+        else if (saved && Number.isFinite(saved.w) && Number.isFinite(saved.h)) {
+          applySize(Math.round((saved.w + saved.h) / 2));
+        }
+      } catch (_) {}
+
+      let dragging = false;
+      let startX = 0;
+      let startY = 0;
+      let startSize = 0;
+
+      handle.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragging = true;
+        const rect = menu.getBoundingClientRect();
+        startX = e.clientX;
+        startY = e.clientY;
+        startSize = (rect.width + rect.height) / 2;
+        document.body.classList.add("resizing-pnl-cal");
+        handle.setPointerCapture(e.pointerId);
+      });
+      handle.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        applySize(startSize + ((startX - e.clientX) + (e.clientY - startY)) / 2);
+      });
+      const endDrag = (e) => {
+        if (!dragging) return;
+        dragging = false;
+        document.body.classList.remove("resizing-pnl-cal");
+        try {
+          handle.releasePointerCapture(e.pointerId);
+        } catch (_) {}
+      };
+      handle.addEventListener("pointerup", endDrag);
+      handle.addEventListener("pointercancel", endDrag);
+      handle.addEventListener("dblclick", (e) => {
+        e.stopPropagation();
+        applySize(DEFAULT_SIZE);
+      });
+    })();
     document.getElementById("headerWalletBtn")?.addEventListener("click", (e) => {
       e.stopPropagation();
       const menu = document.getElementById("headerWalletMenu");
@@ -3887,6 +4338,8 @@
     document.addEventListener("click", () => {
       const menu = document.getElementById("headerWalletMenu");
       if (menu && !menu.hidden) setHeaderWalletMenuOpen(false);
+      const cal = document.getElementById("headerPnlCalMenu");
+      if (cal && !cal.hidden) setPnlCalOpen(false);
     });
 
     // Header balance refresh: event-driven (trade fills, start/stop, transfers,
@@ -3915,6 +4368,7 @@
 
     function render(state) {
       lastRenderState = state;
+      ingestDailyPnl(state);
       maybeRefreshWalletOnTrade(state);
       const balLabel = document.getElementById("balanceLabel");
       const balEl = document.getElementById("balance");

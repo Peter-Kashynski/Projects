@@ -61,6 +61,271 @@ header {
   align-items: center;
   gap: 0.75rem;
 }
+.header-pnl-cal-wrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+.header-pnl-cal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 90%, var(--bg));
+  color: var(--accent);
+  cursor: pointer;
+  line-height: 1;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.header-pnl-cal-btn:hover,
+.header-pnl-cal-btn[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--panel) 82%, var(--accent) 8%);
+  color: var(--text);
+}
+.header-pnl-cal-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+.header-pnl-cal-menu {
+  --pnl-cal-size: 560px;
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  z-index: 46;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: min(var(--pnl-cal-size), calc(100vw - 2rem));
+  height: auto;
+  min-width: min(480px, calc(100vw - 2rem));
+  max-width: min(900px, calc(100vw - 2rem));
+  max-height: calc(100vh - 4.5rem);
+  padding: 0.75rem 0.85rem 1.4rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 10px 28px color-mix(in srgb, #000 35%, transparent);
+  overflow: auto;
+}
+.header-pnl-cal-menu[hidden] { display: none !important; }
+.header-pnl-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  gap: 0.45rem;
+  margin-bottom: 0.5rem;
+}
+.header-pnl-cal-brand {
+  min-width: 0;
+  font-size: clamp(0.72rem, calc(var(--pnl-cal-size) * 0.03), 0.95rem);
+  font-weight: 650;
+  color: var(--text);
+  white-space: nowrap;
+}
+.header-pnl-cal-head-right {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+.header-pnl-cal-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  text-align: center;
+  font-size: clamp(0.82rem, calc(var(--pnl-cal-size) * 0.034), 1.05rem);
+  font-weight: 650;
+  color: var(--text);
+  white-space: nowrap;
+}
+.header-pnl-cal-nav {
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.header-pnl-cal-nav:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.header-pnl-cal-nav:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+.header-pnl-cal-unit {
+  margin-left: 0.2rem;
+  padding: 0.32rem 0.58rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: clamp(0.72rem, calc(var(--pnl-cal-size) * 0.03), 0.88rem);
+  font-weight: 650;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.header-pnl-cal-unit:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.header-pnl-cal-head .header-wallet-menu-close {
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  font-size: 1.55rem;
+}
+.header-pnl-cal-summary {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  gap: 0.22rem;
+  margin-bottom: 0.55rem;
+}
+.header-pnl-cal-month-pnl {
+  font-size: clamp(0.95rem, calc(var(--pnl-cal-size) * 0.042), 1.45rem);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.header-pnl-cal-month-pnl.up { color: #3dcc8c; }
+.header-pnl-cal-month-pnl.down { color: #e85d5d; }
+.header-pnl-cal-spark {
+  display: block;
+  width: 100%;
+  height: clamp(22px, calc(var(--pnl-cal-size) * 0.075), 40px);
+  overflow: visible;
+}
+.header-pnl-cal-spark-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: clamp(0.55rem, calc(var(--pnl-cal-size) * 0.022), 0.72rem);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.header-pnl-cal-spark-axis .up { color: #3dcc8c; }
+.header-pnl-cal-spark-axis .down { color: #e85d5d; }
+.header-pnl-cal-weekdays,
+.header-pnl-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.18rem;
+  min-width: 0;
+}
+.header-pnl-cal-weekdays {
+  flex: 0 0 auto;
+  margin-bottom: 0.28rem;
+}
+.header-pnl-cal-grid {
+  flex: 0 0 auto;
+  min-height: 0;
+  grid-auto-rows: auto;
+}
+.header-pnl-cal-weekdays span {
+  text-align: center;
+  font-size: clamp(0.62rem, calc(var(--pnl-cal-size) * 0.028), 1.05rem);
+  font-weight: 650;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+.header-pnl-cal-day {
+  position: relative;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 1.15 / 1;
+  min-height: 0;
+  padding: 0.7rem 0.2rem 0.2rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+}
+.header-pnl-cal-day.empty {
+  background: transparent;
+  border-color: transparent;
+}
+.header-pnl-cal-day.today {
+  border-color: color-mix(in srgb, var(--accent) 70%, var(--border));
+}
+.header-pnl-cal-day.up { background: color-mix(in srgb, #3dcc8c 22%, var(--panel)); }
+.header-pnl-cal-day.down { background: color-mix(in srgb, #e85d5d 20%, var(--panel)); }
+.header-pnl-cal-day.flat .header-pnl-cal-pnl { color: #8a8f98; font-weight: 600; }
+.header-pnl-cal-day.best {
+  background: color-mix(in srgb, #d4a017 38%, var(--panel));
+  border-color: color-mix(in srgb, #f0c14b 70%, var(--border));
+}
+.header-pnl-cal-num {
+  position: absolute;
+  top: 0.16rem;
+  left: 0.22rem;
+  font-size: clamp(0.58rem, 18cqmin, 0.82rem);
+  font-weight: 650;
+  color: var(--muted);
+  line-height: 1;
+}
+.header-pnl-cal-dot {
+  position: absolute;
+  top: 0.28rem;
+  right: 0.28rem;
+  width: 0.28rem;
+  height: 0.28rem;
+  border-radius: 50%;
+  background: #6b717a;
+}
+.header-pnl-cal-day.empty .header-pnl-cal-dot { display: none; }
+.header-pnl-cal-day.up .header-pnl-cal-dot { background: #3dcc8c; }
+.header-pnl-cal-day.down .header-pnl-cal-dot { background: #e85d5d; }
+.header-pnl-cal-day.best .header-pnl-cal-dot { background: #f0c14b; }
+.header-pnl-cal-pnl {
+  font-size: clamp(0.68rem, 26cqmin, 1.15rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  color: var(--muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+.header-pnl-cal-day.flat .header-pnl-cal-pnl {
+  font-size: clamp(0.78rem, 38cqmin, 1.65rem);
+  font-weight: 700;
+}
+.header-pnl-cal-day.up .header-pnl-cal-pnl { color: #3dcc8c; }
+.header-pnl-cal-day.down .header-pnl-cal-pnl { color: #e85d5d; }
+.header-pnl-cal-day.best .header-pnl-cal-num { color: #f3d67a; }
+.header-pnl-cal-day.best .header-pnl-cal-pnl { color: #f0c14b; }
+.header-pnl-cal-resize {
+  position: absolute;
+  left: 0.35rem;
+  bottom: 0.22rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  cursor: nesw-resize;
+  background:
+    linear-gradient(45deg, transparent 0 46%, var(--muted) 46% 54%, transparent 54% 70%, var(--muted) 70% 78%, transparent 78%);
+  opacity: 0.7;
+}
+.header-pnl-cal-resize:hover { opacity: 1; }
+body.resizing-pnl-cal { cursor: nesw-resize; user-select: none; }
 .header-wallet-wrap {
   position: relative;
 }

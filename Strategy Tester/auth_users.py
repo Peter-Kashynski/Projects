@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import threading
+from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
@@ -23,6 +24,18 @@ def _empty() -> dict[str, Any]:
     return {"users": {}}
 
 
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def _file_created_iso() -> str:
+    try:
+        ts = USERS_PATH.stat().st_mtime
+        return datetime.fromtimestamp(ts, timezone.utc).replace(microsecond=0).isoformat()
+    except OSError:
+        return _utc_now_iso()
+
+
 def _load() -> dict[str, Any]:
     if not USERS_PATH.exists():
         return _empty()
@@ -32,6 +45,17 @@ def _load() -> dict[str, Any]:
         return _empty()
     if not isinstance(data, dict) or not isinstance(data.get("users"), dict):
         return _empty()
+    fallback = _file_created_iso()
+    dirty = False
+    for user in data["users"].values():
+        if isinstance(user, dict) and not user.get("created_at"):
+            user["created_at"] = fallback
+            dirty = True
+    if dirty:
+        try:
+            _save(data)
+        except OSError:
+            pass
     return data
 
 
@@ -100,6 +124,7 @@ def create_user(
             "pp_api_key": api_key,
             "wallet_pubkey": wallet_pubkey,
             "private_key": private_key,
+            "created_at": _utc_now_iso(),
         }
         data["users"][key] = user
         _save(data)
@@ -118,9 +143,9 @@ def verify_login(email: str, password: str) -> tuple[dict[str, Any] | None, str 
         users = _load().get("users") or {}
     if not users:
         return None, (
-            "No accounts on this server yet. Use Create account here, or copy your local "
-            "data/users.json into this app's data folder on the host (Render disk/shell, "
-            "or STONKBOT_DATA_DIR if you use persistent storage)."
+            "No accounts on this server yet "
+            f"({USERS_PATH}). Use Create account here, or copy your local "
+            "data/users.json onto the persistent disk (Render: /var/data)."
         )
     user = get_user(email)
     if not user:
@@ -184,6 +209,7 @@ def public_user_payload(user: dict[str, Any], *, include_secrets: bool = False) 
         "email": user.get("email") or "",
         "wallet_pubkey": user.get("wallet_pubkey") or "",
         "has_helius_api_key": bool((user.get("helius_api_key") or "").strip()),
+        "created_at": user.get("created_at") or "",
     }
     if include_secrets:
         payload["pp_api_key"] = user.get("pp_api_key") or ""
