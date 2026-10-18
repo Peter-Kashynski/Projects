@@ -4006,12 +4006,12 @@
       const cells = [];
       for (let i = 0; i < startPad; i++) cells.push(`<div class="header-pnl-cal-day empty"></div>`);
       for (const row of dayRows) {
-        if (row.afterToday || row.beforeAccount) {
+        if (row.afterToday) {
           cells.push(`<div class="header-pnl-cal-day empty"></div>`);
           continue;
         }
         const isBest = row.key === bestKey && bestPnl > 1e-12;
-        const hasPnl = !row.beforeAccount && Math.abs(row.pnl) > 1e-12;
+        const hasPnl = Math.abs(row.pnl) > 1e-12;
         const cls = [
           "header-pnl-cal-day",
           row.key === todayKey ? "today" : "",
@@ -4039,20 +4039,17 @@
       const sparkPoints = [];
       let cum = 0;
       for (const row of dayRows) {
-        if (row.afterToday || row.beforeAccount) {
-          if (!row.afterToday) {
-            sparkPoints.push({ d: row.d, value: cum });
+        if (row.afterToday) break;
+        if (!row.beforeAccount) {
+          if (row.pnl > 1e-12) {
+            profitDays += 1;
+            profitSol += row.pnl;
+          } else if (row.pnl < -1e-12) {
+            lossDays += 1;
+            lossSol += row.pnl;
           }
-          continue;
+          cum += row.pnl;
         }
-        if (row.pnl > 1e-12) {
-          profitDays += 1;
-          profitSol += row.pnl;
-        } else if (row.pnl < -1e-12) {
-          lossDays += 1;
-          lossSol += row.pnl;
-        }
-        cum += row.pnl;
         sparkPoints.push({ d: row.d, value: cum });
       }
       paintPnlSpark(sparkPoints);
